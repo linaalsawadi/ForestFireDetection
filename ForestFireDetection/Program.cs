@@ -1,4 +1,12 @@
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using ForestFireDetection.Data;
 var builder = WebApplication.CreateBuilder(args);
+var connectionString = builder.Configuration.GetConnectionString("ForestFireDetectionDbContextConnection") ?? throw new InvalidOperationException("Connection string 'ForestFireDetectionDbContextConnection' not found.");
+
+builder.Services.AddDbContext<ForestFireDetectionDbContext>(options => options.UseSqlServer(connectionString));
+
+builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true).AddEntityFrameworkStores<ForestFireDetectionDbContext>();
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
