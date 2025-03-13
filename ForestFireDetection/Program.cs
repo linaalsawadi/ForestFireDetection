@@ -7,7 +7,7 @@ var connectionString = builder.Configuration.GetConnectionString("ForestFireDete
 
 builder.Services.AddDbContext<ForestFireDetectionDbContext>(options => options.UseSqlServer(connectionString));
 
-builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true).AddEntityFrameworkStores<ForestFireDetectionDbContext>();
+builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true).AddEntityFrameworkStores<ForestFireDetectionDbContext>();
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
