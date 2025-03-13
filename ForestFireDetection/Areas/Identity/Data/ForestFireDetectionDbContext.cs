@@ -1,10 +1,11 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using ForestFireDetection.Areas.Identity.Data;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace ForestFireDetection.Data;
 
-public class ForestFireDetectionDbContext : IdentityDbContext<IdentityUser>
+public class ForestFireDetectionDbContext : IdentityDbContext<ApplicationUser>
 {
     public ForestFireDetectionDbContext(DbContextOptions<ForestFireDetectionDbContext> options)
         : base(options)
