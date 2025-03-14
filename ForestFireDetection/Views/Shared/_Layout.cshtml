@@ -1,4 +1,10 @@
-﻿<!doctype html>
+﻿﻿@using Microsoft.AspNetCore.Identity
+@using ForestFireDetection.Areas.Identity.Data
+
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+<!doctype html>
 <html lang="en">
 <!--begin::Head-->
 <head>
@@ -193,44 +199,23 @@
                     </li>
                     <!--end::Fullscreen Toggle-->
                     <!--begin::User Menu Dropdown-->
-                    <li class="nav-item dropdown user-menu">
-                        <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
-                            <img src="../../dist/assets/img/user2-160x160.jpg"
-                                 class="user-image rounded-circle shadow"
-                                 alt="User Image" />
-                            <span class="d-none d-md-inline">Alexander Pierce</span>
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-end">
-                            <!--begin::User Image-->
-                            <li class="user-header text-bg-primary">
-                                <img src="../../dist/assets/img/user2-160x160.jpg"
-                                     class="rounded-circle shadow"
-                                     alt="User Image" />
-                                <p>
-                                    Alexander Pierce - Web Developer
-                                    <small>Member since Nov. 2023</small>
-                                </p>
-                            </li>
-                            <!--end::User Image-->
-                            <!--begin::Menu Body-->
-                            <li class="user-body">
-                                <!--begin::Row-->
-                                <div class="row">
-                                    <div class="col-4 text-center"><a href="#">Followers</a></div>
-                                    <div class="col-4 text-center"><a href="#">Sales</a></div>
-                                    <div class="col-4 text-center"><a href="#">Friends</a></div>
-                                </div>
-                                <!--end::Row-->
-                            </li>
-                            <!--end::Menu Body-->
-                            <!--begin::Menu Footer-->
-                            <li class="user-footer">
-                                <a href="#" class="btn btn-default btn-flat">Profile</a>
-                                <a href="#" class="btn btn-default btn-flat float-end">Sign out</a>
-                            </li>
-                            <!--end::Menu Footer-->
-                        </ul>
-                    </li>
+
+                            @if (SignInManager.IsSignedIn(User)){
+                            <!-- UserImage -->
+                            <img src="~/dist/assets/img/user2-160x160.jpg"
+                                 class="user-image rounded-circle shadow me-2"
+                                 alt="User Image" width="40" height="40" />
+                            <!-- UserName As Link To Update -->
+                                <a id="manage" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage" class="d-none d-md-inline fw-bold text-dark text-decoration-none">
+                                    @UserManager.GetUserName(User)
+                                </a>
+                                <form id="logoutForm" class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+                                    <button id="logout" type="submit" class="nav-link btn btn-link text-dark border-0">Logout</button>
+                                </form>
+                             }                           
+                   
+                        
+
                     <!--end::User Menu Dropdown-->
                 </ul>
                 <!--end::End Navbar Links-->
@@ -690,13 +675,9 @@
         <!--end::App Main-->
         <!--begin::Footer-->
         <footer class="app-footer">
-            <!--begin::To the end-->
-            <div class="float-end d-none d-sm-inline">Anything you want</div>
-            <!--end::To the end-->
             <!--begin::Copyright-->
             <strong>
-                Copyright &copy; 2014-2024&nbsp;
-                <a href="https://adminlte.io" class="text-decoration-none">AdminLTE.io</a>.
+                Copyright &copy;
             </strong>
             All rights reserved.
             <!--end::Copyright-->
