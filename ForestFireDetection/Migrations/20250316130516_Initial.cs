@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace ForestFireDetection.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class Initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -50,6 +50,24 @@ namespace ForestFireDetection.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AspNetUsers", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Sensors",
+                columns: table => new
+                {
+                    SensorId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    SensorLocation = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    SensorState = table.Column<string>(type: "nvarchar(6)", maxLength: 6, nullable: false),
+                    SensorPositioningDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    SensorDangerSituation = table.Column<bool>(type: "bit", nullable: false),
+                    Temperature = table.Column<float>(type: "real", nullable: false),
+                    Humidity = table.Column<float>(type: "real", nullable: false),
+                    Smoke = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Sensors", x => x.SensorId);
                 });
 
             migrationBuilder.CreateTable(
@@ -215,6 +233,9 @@ namespace ForestFireDetection.Migrations
 
             migrationBuilder.DropTable(
                 name: "AspNetUserTokens");
+
+            migrationBuilder.DropTable(
+                name: "Sensors");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");

@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ForestFireDetection.Migrations
 {
     [DbContext(typeof(ForestFireDetectionDbContext))]
-    [Migration("20250315114404_UpdateUserSchema")]
-    partial class UpdateUserSchema
+    [Migration("20250316130516_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -96,6 +96,42 @@ namespace ForestFireDetection.Migrations
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
                     b.ToTable("AspNetUsers", (string)null);
+                });
+
+            modelBuilder.Entity("ForestFireDetection.Models.Sensor", b =>
+                {
+                    b.Property<Guid>("SensorId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<float>("Humidity")
+                        .HasColumnType("real");
+
+                    b.Property<bool>("SensorDangerSituation")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("SensorLocation")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("SensorPositioningDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("SensorState")
+                        .IsRequired()
+                        .HasMaxLength(6)
+                        .HasColumnType("nvarchar(6)");
+
+                    b.Property<int>("Smoke")
+                        .HasColumnType("int");
+
+                    b.Property<float>("Temperature")
+                        .HasColumnType("real");
+
+                    b.HasKey("SensorId");
+
+                    b.ToTable("Sensors");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
