@@ -8,7 +8,7 @@ using System.Diagnostics;
 
 namespace ForestFireDetection.Controllers
 {
-    [Authorize]
+    [Authorize(Roles="Admin")]
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
@@ -25,7 +25,7 @@ namespace ForestFireDetection.Controllers
             ViewData["UserID"] = _userManager.GetUserId(this.User);
             return View();
         }
-
+        //[Authorize(Roles = "Admin")]
         public IActionResult Privacy()
         {
             return View();
