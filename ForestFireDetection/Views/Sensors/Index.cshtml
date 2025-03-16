@@ -1,0 +1,52 @@
+﻿@model List<Sensor> 
+@{
+}
+
+<h2 class="text-center mb-5">List Of Sensors</h2>
+
+<div class="row mb-5">
+    <div class="col">
+        <a class="btn btn-primary" asp-controller="Sensors" asp-action="Create">New Sensor</a>
+    </div>
+    <div class="col">
+
+    </div>
+</div>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>SensorId</th>
+            <th>SensorLocation</th>
+            <th>SensorState</th>
+            <th>SensorPositioningDate</th>
+            <th>SensorDangerSituation</th>
+            <th>Temperature</th>
+            <th>Humidity</th>
+            <th>Smoke</th>
+        </tr>
+    </thead>
+    <tbody>
+
+        @foreach(var sensor in Model)
+        {
+            <td>@sensor.SensorId</td>
+            <td>@sensor.SensorLocation</td>
+            <td>@sensor.SensorState</td>
+            <td>@sensor.SensorPositioningDate.ToString("MM/dd/yyyy")</td>
+            <td>@sensor.SensorDangerSituation</td>
+            <td>@sensor.Temperature</td>
+            <td>@sensor.Humidity</td>
+            <td>@sensor.Smoke</td>
+            <td style="white-space:nowrap">
+
+                <a class="btn btn-primary btn-sm" asp-controller="Sensors" asp-action="Edit" asp-route-id="@sensor.SensorId">Edit</a>
+
+            <a class="btn btn-danger btn-sm" asp-controller="Sensors" asp-action="Delete" asp-route-id="@sensor.SensorId">Delete</a>
+
+            </td>
+
+        }
+
+````</tbody>
+</table>
