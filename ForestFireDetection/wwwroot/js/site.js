@@ -1,4 +1,8 @@
-﻿// Please see documentation at https://learn.microsoft.com/aspnet/core/client-side/bundling-and-minification
-// for details on configuring this project to bundle and minify static web assets.
-
-// Write your JavaScript code.
+﻿async function logMovies() {
+    const response = await fetch("https://localhost:7188/api/DoctorApi");
+    const data = await response.json();
+    console.log(data)
+    
+    document.querySelector("#getL").innerHTML = data[1].name ;
+}
+logMovies();
