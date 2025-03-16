@@ -37,7 +37,6 @@ namespace ForestFireDetection.Controllers
 
             Sensor sensor = new Sensor()
             {
-                 
             SensorLocation = sensorDto.SensorLocation,
             SensorState = sensorDto.SensorState,
             SensorPositioningDate = sensorDto.SensorPositioningDate,
@@ -49,10 +48,57 @@ namespace ForestFireDetection.Controllers
             return RedirectToAction("Index", "Sensors");
         }
 
-        public IActionResult Edit()
+        public IActionResult Edit(Guid id)
         {
-            var sensors = context.Sensors.OrderByDescending(p => p.SensorId).ToList();
-            return View(sensors);
+            var sensor = context.Sensors.Find(id);
+            if (sensor == null)
+            {
+                return RedirectToAction("Index", "Sensors");
+            }
+
+            SensorDto sensorDto = new SensorDto()
+            {
+                SensorLocation = sensor.SensorLocation,
+                SensorState = sensor.SensorState,
+                SensorPositioningDate = sensor.SensorPositioningDate,
+                SensorDangerSituation = sensor.SensorDangerSituation,
+            };
+
+            ViewData["SensorId"] = sensor.SensorId;
+            ViewData["SensorLocation"] = sensor.SensorLocation;
+            ViewData["SensorState"] = sensor.SensorState;
+            ViewData["SensorPositioningDate"] = sensor.SensorPositioningDate;
+
+
+            return View(sensorDto);
+        }
+
+        [HttpPost]
+        public IActionResult Edit(Guid id, SensorDto sensorDto)
+        {
+            var sensor = context.Sensors.Find(id);
+            if (sensor == null)
+            {
+                return RedirectToAction("Index", "Sensors");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                ViewData["SensorId"] = sensor.SensorId;
+                ViewData["SensorLocation"] = sensor.SensorLocation;
+                ViewData["SensorState"] = sensor.SensorState;
+                ViewData["SensorPositioningDate"] = sensor.SensorPositioningDate.ToString("MM/dd/yyyy");
+
+                return View(sensorDto);
+            }
+
+            sensor.SensorLocation = sensorDto.SensorLocation;
+            sensor.SensorState = sensorDto.SensorState;
+            sensor.SensorPositioningDate = sensorDto.SensorPositioningDate;
+            sensor.SensorDangerSituation = sensorDto.SensorDangerSituation;
+
+            context.SaveChanges();
+            return RedirectToAction("Index", "Sensors");
         }
     }
 }
