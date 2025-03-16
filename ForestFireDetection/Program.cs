@@ -69,8 +69,7 @@ public class Program
                 user.UserName = email;
                 user.Email = email;
                 user.EmailConfirmed =true ;
-                user.FirstName = "Admin";
-                user.LastName = "User";
+                
 
                await userManager.CreateAsync(user,password);
                await userManager.AddToRoleAsync(user, "Admin");
