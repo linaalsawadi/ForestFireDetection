@@ -12,7 +12,7 @@ namespace ForestFireDetection.Controllers
         }
         public IActionResult Index()
         {
-            var sensors = context.Sensors.ToList();
+            var sensors = context.Sensors.OrderByDescending(p=>p.SensorId).ToList();
             return View(sensors);
         }
     }
