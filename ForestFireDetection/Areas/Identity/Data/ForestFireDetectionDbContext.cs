@@ -1,4 +1,5 @@
 ﻿using ForestFireDetection.Areas.Identity.Data;
+using ForestFireDetection.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -11,6 +12,8 @@ public class ForestFireDetectionDbContext : IdentityDbContext<ApplicationUser>
         : base(options)
     {
     }
+
+    public DbSet<Sensor> Sensors { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
