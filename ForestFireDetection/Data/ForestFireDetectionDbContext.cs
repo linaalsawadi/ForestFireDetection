@@ -1,5 +1,4 @@
-﻿using ForestFireDetection.Areas.Identity.Data;
-using ForestFireDetection.Models;
+﻿using ForestFireDetection.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;

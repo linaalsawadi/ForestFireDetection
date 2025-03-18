@@ -1,7 +1,8 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using ForestFireDetection.Data;
-using ForestFireDetection.Areas.Identity.Data;
+using ForestFireDetection.Models;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 public class Program
 {
@@ -12,21 +13,33 @@ public class Program
 
         builder.Services.AddDbContext<ForestFireDetectionDbContext>(options => options.UseSqlServer(connectionString));
 
-        builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = false)
-            .AddRoles<IdentityRole>()
-            .AddEntityFrameworkStores<ForestFireDetectionDbContext>();
-
         // Add services to the container.
         builder.Services.AddControllersWithViews();
         builder.Services.AddRazorPages();
 
 
-        builder.Services.Configure<IdentityOptions>(options =>
+        // Add ASP.NET Core Identity services
+        builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
         {
+            // Password settings
+            options.Password.RequireDigit = false;
+            options.Password.RequiredLength = 6;
+            options.Password.RequireNonAlphanumeric = false;
             options.Password.RequireUppercase = false;
-        });
+            options.Password.RequireLowercase = false;
+        }).AddEntityFrameworkStores<ForestFireDetectionDbContext>();
+        builder.Services.AddMemoryCache();
+        builder.Services.AddSession();
+        builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+               .AddCookie();
 
         var app = builder.Build();
+
+        var scope = app.Services.CreateScope();
+        var services = scope.ServiceProvider;
+
+        var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+        await Seeds.SeedUsersAndRolesAsync(app);
 
         // Configure the HTTP request pipeline.
         if (!app.Environment.IsDevelopment())
@@ -37,44 +50,14 @@ public class Program
 
         app.UseRouting();
 
+        app.UseAuthentication();
         app.UseAuthorization();
+
 
         app.MapControllerRoute(
             name: "default",
             pattern: "{controller=Home}/{action=Index}/{id?}");
         app.MapRazorPages();
-
-        using (var scope = app.Services.CreateScope())
-        {
-            var roleManager =
-                scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-            var roles = new[] { "Admin", "Manager", "Member" };
-            foreach (var role in roles)
-            {
-                if (!await roleManager.RoleExistsAsync(role))
-                    await roleManager.CreateAsync(new IdentityRole(role));
-
-            }
-        }
-        using (var scope = app.Services.CreateScope())
-        {
-            var userManager =
-                scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-            string email = "admin@admin.com";
-            string password = "test1234@";
-
-            if(await userManager.FindByEmailAsync(email)==null)
-            {
-                var user = new ApplicationUser();
-                user.UserName = email;
-                user.Email = email;
-                user.EmailConfirmed =true ;
-                
-
-               await userManager.CreateAsync(user,password);
-               await userManager.AddToRoleAsync(user, "Admin");
-            }
-        }
         
         app.Run();
     }
