@@ -1,6 +1,4 @@
 ﻿@model List<Sensor>
-@{
-}
 
 <h2 class="text-center mb-4">List Of Sensors</h2>
 
@@ -28,7 +26,7 @@
         <tbody>
             @foreach (var sensor in Model)
             {
-                <tr>
+                <tr class="sensor-row" data-id="@sensor.SensorId" data-temperature="@sensor.Temperature" data-humidity="@sensor.Humidity" data-smoke="@sensor.Smoke">
                     <td>@sensor.SensorId</td>
                     <td>@sensor.SensorLocation</td>
                     <td>@sensor.SensorState</td>
@@ -46,9 +44,92 @@
                         </a>
                     </td>
                 </tr>
+                <tr class="chart-row" id="chart-@sensor.SensorId" style="display: none;">
+                    <td colspan="9">
+                        <div class="chart-container d-flex justify-content-between">
+                            <div class="chart-box">
+                                <canvas id="temperatureChart-@sensor.SensorId" width="400" height="200"></canvas>
+                            </div>
+                            <div class="chart-box">
+                                <canvas id="humidityChart-@sensor.SensorId" width="400" height="200"></canvas>
+                            </div>
+                            <div class="chart-box">
+                                <canvas id="smokeChart-@sensor.SensorId" width="400" height="200"></canvas>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
             }
         </tbody>
     </table>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // function to create the individual charts
+    function createChart(chartId, dataLabel, dataValue) {
+        var ctx = document.getElementById(chartId).getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: [dataLabel],
+                datasets: [{
+                    label: dataLabel,
+                    data: [dataValue],
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)', // Blue color
+                    borderColor: 'rgba(54, 162, 235, 1)', // Blue color
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                },
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    }
+
+    // Adding click event listener to each row
+    document.querySelectorAll(".sensor-row").forEach(function(row) {
+        row.addEventListener("click", function() {
+            var sensorId = this.getAttribute("data-id");
+            var temperature = parseFloat(this.getAttribute("data-temperature"));
+            var humidity = parseFloat(this.getAttribute("data-humidity"));
+            var smoke = parseFloat(this.getAttribute("data-smoke"));
+
+            // Toggle chart visibility
+            var chartRow = document.getElementById('chart-' + sensorId);
+            chartRow.style.display = chartRow.style.display === 'none' ? 'table-row' : 'none';
+
+            // Create the charts for the clicked row if not already created
+            if (chartRow.style.display === 'table-row') {
+                createChart('temperatureChart-' + sensorId, 'Temperature', temperature);
+                createChart('humidityChart-' + sensorId, 'Humidity', humidity);
+                createChart('smokeChart-' + sensorId, 'Smoke', smoke);
+            }
+        });
+    });
+</script>
+
+<style>
+    .chart-container {
+        display: flex;
+        justify-content: space-around;
+        margin-top: 20px;
+    }
+
+    .chart-box {
+        width: 30%; /* Adjust the width of each chart */
+        padding: 10px;
+    }
+</style>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
