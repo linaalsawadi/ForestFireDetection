@@ -1,18 +1,16 @@
 ﻿@model ForestFireDetection.Models.Sensor
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Edit";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h1>Create</h1>
-
-<h4>Sensor</h4>
 <hr />
 <div class="row">
     <div class="col-md-4">
-        <form asp-action="Create">
+        <form asp-action="Edit">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="SensorId" />
             <div class="form-group">
                 <label asp-for="SensorLocation" class="control-label"></label>
                 <input asp-for="SensorLocation" class="form-control" />
@@ -47,4 +45,3 @@
         </form>
     </div>
 </div>
-

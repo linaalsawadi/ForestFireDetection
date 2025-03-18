@@ -28,31 +28,84 @@ namespace ForestFireDetection.Controllers
         }
 
         [HttpPost]
-        public IActionResult Create(SensorDto sensorDto)
+        public IActionResult Create(Sensor sensor)
         {
             if (!ModelState.IsValid)
             {
-                return View(sensorDto);
+                return View(sensor);
             }
 
-            Sensor sensor = new Sensor()
+            Sensor sensornew = new Sensor()
             {
-                 
-            SensorLocation = sensorDto.SensorLocation,
-            SensorState = sensorDto.SensorState,
-            SensorPositioningDate = sensorDto.SensorPositioningDate,
-            SensorDangerSituation = sensorDto.SensorDangerSituation,
+            SensorLocation = sensor.SensorLocation,
+            SensorState = sensor.SensorState,
+            SensorPositioningDate = sensor.SensorPositioningDate,
+            SensorDangerSituation = sensor.SensorDangerSituation,
             };
 
-            context.Sensors.Add(sensor);
+            context.Sensors.Add(sensornew);
             context.SaveChanges();
             return RedirectToAction("Index", "Sensors");
         }
 
-        public IActionResult Edit()
+        public IActionResult Edit(Guid id)
         {
-            var sensors = context.Sensors.OrderByDescending(p => p.SensorId).ToList();
-            return View(sensors);
+            var sensor = context.Sensors.Find(id);
+            if (sensor == null)
+            {
+                return RedirectToAction("Index", "Sensors");
+            }
+
+            Sensor sensornew = new Sensor()
+            {
+                SensorLocation = sensor.SensorLocation,
+                SensorPositioningDate = sensor.SensorPositioningDate,
+                SensorDangerSituation = sensor.SensorDangerSituation,
+            };
+
+            ViewData["SensorId"] = sensor.SensorId;
+            ViewData["SensorState"] = sensor.SensorState;
+
+
+            return View(sensornew);
+        }
+
+        [HttpPost]
+        public IActionResult Edit(Guid id, Sensor sensornew)
+        {
+            var sensor = context.Sensors.Find(id);
+            if (sensor == null)
+            {
+                return RedirectToAction("Index", "Sensors");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                ViewData["SensorId"] = sensor.SensorId;
+                ViewData["SensorState"] = sensor.SensorState;
+
+                return View(sensornew);
+            }
+
+            sensor.SensorLocation = sensornew.SensorLocation;
+            sensor.SensorPositioningDate = sensornew.SensorPositioningDate;
+            sensor.SensorDangerSituation = sensornew.SensorDangerSituation;
+
+            context.SaveChanges();
+            return RedirectToAction("Index", "Sensors");
+        }
+
+        public IActionResult Delete(Guid id)
+        {
+            var sensor = context.Sensors.Find(id);
+            if (sensor == null)
+            {
+                return RedirectToAction("Index", "Sensors");
+            }
+            context.Sensors.Remove(sensor);
+            context.SaveChanges(true);
+
+            return RedirectToAction("Index","Sensors");
         }
     }
 }
