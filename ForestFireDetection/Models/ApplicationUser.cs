@@ -5,9 +5,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 
-namespace ForestFireDetection.Areas.Identity.Data;
+namespace ForestFireDetection.Models;
 
-public class ApplicationUser: IdentityUser
+public class ApplicationUser : IdentityUser
 {
     [PersonalData]
     [Column(TypeName = "nvarchar(100)")]

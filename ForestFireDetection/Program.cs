@@ -1,10 +1,9 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using ForestFireDetection.Data;
 using ForestFireDetection.Models;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using ForestFireDetection.Areas.Identity.Data;
-//HI Im Lina and Ranim and Suhayb and Soureya
+
 public class Program
 {
     public static async Task Main(string[] args)
@@ -15,7 +14,6 @@ public class Program
         builder.Services.AddDbContext<ForestFireDetectionDbContext>(options => options.UseSqlServer(connectionString));
 
         // Add services to the container.
-
         builder.Services.AddControllersWithViews();
         builder.Services.AddRazorPages();
 
@@ -41,6 +39,7 @@ public class Program
         var services = scope.ServiceProvider;
 
         var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+        await Seeds.SeedUsersAndRolesAsync(app);
 
         // Configure the HTTP request pipeline.
         if (!app.Environment.IsDevelopment())
@@ -59,7 +58,7 @@ public class Program
             name: "default",
             pattern: "{controller=Home}/{action=Index}/{id?}");
         app.MapRazorPages();
-
+        
         app.Run();
     }
 }

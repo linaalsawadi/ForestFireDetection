@@ -1,6 +1,5 @@
-
-using ForestFireDetection.Areas.Identity.Data;
 using ForestFireDetection.Models;
+using Hospital_appointment_system.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -8,7 +7,7 @@ using System.Diagnostics;
 
 namespace ForestFireDetection.Controllers
 {
-    [Authorize(Roles="Admin")]
+    [Authorize]
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
@@ -19,15 +18,10 @@ namespace ForestFireDetection.Controllers
             _logger = logger;
             this._userManager = userManager;
         }
-
+        [Authorize]
         public IActionResult Index()
         {
             ViewData["UserID"] = _userManager.GetUserId(this.User);
-            return View();
-        }
-        //[Authorize(Roles = "Admin")]
-        public IActionResult Privacy()
-        {
             return View();
         }
 
