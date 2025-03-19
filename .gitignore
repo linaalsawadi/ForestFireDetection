@@ -361,3 +361,8 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+/ForestFireDetection/appsettings.json
+/ForestFireDetection/Program.cs
+/.gitignore
+/ForestFireDetection/appsettings.json
+/ForestFireDetection/Program.cs
