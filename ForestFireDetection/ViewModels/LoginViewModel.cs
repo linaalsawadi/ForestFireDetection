@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Hospital_appointment_system.ViewModels
+namespace ForestFireDetection.ViewModels
 {
     public class LoginViewModel
     {

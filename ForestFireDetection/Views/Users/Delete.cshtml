@@ -1,0 +1,26 @@
+﻿@model ApplicationUser
+<div class="pt-5">
+	<form method="post" asp-action="Delete">
+		<div calss="border p-3 mt-4">
+			<div calss="row pd-2">
+				<h2 class="text-primary">@ViewData["DeletePatient"]</h2>
+				<hr />
+
+			</div>
+			
+		</div>
+		<div class="mb-3">
+			<label asp-for="FirstName"></label>
+			<input asp-for="FirstName" disabled class="form-control" />
+		</div>
+		<div class="mb-3">
+			<label asp-for="Email"></label>
+			<input type="email" asp-for="Email" disabled class="form-control" />
+		</div>
+
+		<button type="submit" class="btn btn-danger" style="width:150px">Delete</button>
+		<a asp-controller="PatientUser" asp-action="ListPatients" class="btn btn-secondary" style="width:150px">
+			Backto List
+		</a>
+	</form>
+</div>

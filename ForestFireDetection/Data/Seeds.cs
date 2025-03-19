@@ -1,5 +1,5 @@
 ﻿using ForestFireDetection.Models;
-using Hospital_appointment_system.Data;
+using ForestFireDetection.Data;
 using Microsoft.AspNetCore.Identity;
 
 namespace ForestFireDetection.Data

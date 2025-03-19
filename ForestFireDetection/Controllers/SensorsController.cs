@@ -1,6 +1,6 @@
 ﻿using ForestFireDetection.Data;
 using ForestFireDetection.Models;
-using Hospital_appointment_system.Data;
+using ForestFireDetection.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;

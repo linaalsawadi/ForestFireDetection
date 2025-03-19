@@ -1,4 +1,4 @@
-﻿namespace Hospital_appointment_system.Data
+﻿namespace ForestFireDetection.Data
 {
     public class UserRoles
     {

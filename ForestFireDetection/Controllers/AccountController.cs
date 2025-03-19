@@ -1,7 +1,7 @@
 ﻿using ForestFireDetection.Data;
 using ForestFireDetection.Models;
-using Hospital_appointment_system.Data;
-using Hospital_appointment_system.ViewModels;
+using ForestFireDetection.Data;
+using ForestFireDetection.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
