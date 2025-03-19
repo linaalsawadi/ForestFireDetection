@@ -1,54 +1,132 @@
-﻿@model List<Sensor>
-@{
-}
+﻿<!-- /.row -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Expandable Table</h3>
+            </div>
+            <!-- ./card-header -->
+            <div class="card-body">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Sensor ID</th>
+                            <th>Location</th>
+                            <th>State</th>
+                            <th>Positioning Date</th>
+                            <th>Danger</th>
+                            <th>Temperature</th>
+                            <th>Humidity</th>
+                            <th>Smoke</th>
+                            <th>ِActions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var sensor in Model)
+                        {
+                            <tr class="sensor-row" data-id="@sensor.SensorId"
+                                data-temperature="@sensor.Temperature"
+                                data-humidity="@sensor.Humidity"
+                                data-smoke="@sensor.Smoke">
+                                <td>@sensor.SensorId</td>
+                                <td>@sensor.SensorLocation</td>
+                                <td>@sensor.SensorState</td>
+                                <td>@sensor.SensorPositioningDate.ToString("MM/dd/yyyy")</td>
+                                <td>@sensor.SensorDangerSituation</td>
+                                <td>@sensor.Temperature</td>
+                                <td>@sensor.Humidity</td>
+                                <td>@sensor.Smoke</td>
+                                <td class="text-nowrap">
+                                    <a class="btn btn-primary btn-sm me-2"
+                                       asp-controller="Sensors" asp-action="Edit"
+                                       asp-route-id="@sensor.SensorId">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </a>
+                                    <a class="btn btn-danger btn-sm"
+                                       asp-controller="Sensors" asp-action="Delete"
+                                       asp-route-id="@sensor.SensorId"
+                                       onclick="return confirm('Are You Sure?')">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr class="expandable-body chart-row" id="chart-@sensor.SensorId" style="display: none;">
+                                <td colspan="9">
+                                    <div class="chart-container d-flex justify-content-between">
+                                        <div class="chart-box">
+                                            <canvas id="temperatureChart-@sensor.SensorId" width="300" height="200"></canvas>
+                                        </div>
+                                        <div class="chart-box">
+                                            <canvas id="humidityChart-@sensor.SensorId" width="300" height="200"></canvas>
+                                        </div>
+                                        <div class="chart-box">
+                                            <canvas id="smokeChart-@sensor.SensorId" width="300" height="200"></canvas>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
 
-<h2 class="text-center mb-4">List Of Sensors</h2>
-
-<div class="d-flex justify-content-between mb-4">
-    <a class="btn btn-success" asp-controller="Sensors" asp-action="Create">
-        <i class="fas fa-plus"></i> New Sensor
-    </a>
+                </table>
+            </div>
+            <!-- /.card-body -->
+        </div>
+        <!-- /.card -->
+    </div>
 </div>
 
-<div class="table-responsive">
-    <table class="table table-hover table-bordered text-center">
-        <thead class="table-dark">
-            <tr>
-                <th>Sensor ID</th>
-                <th>Location</th>
-                <th>State</th>
-                <th>Positioning Date</th>
-                <th>Danger</th>
-                <th>Temperature</th>
-                <th>Humidity</th>
-                <th>Smoke</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var sensor in Model)
-            {
-                <tr>
-                    <td>@sensor.SensorId</td>
-                    <td>@sensor.SensorLocation</td>
-                    <td>@sensor.SensorState</td>
-                    <td>@sensor.SensorPositioningDate.ToString("MM/dd/yyyy")</td>
-                    <td>@sensor.SensorDangerSituation</td>
-                    <td>@sensor.Temperature</td>
-                    <td>@sensor.Humidity</td>
-                    <td>@sensor.Smoke</td>
-                    <td class="text-nowrap">
-                        <a class="btn btn-primary btn-sm me-2" asp-controller="Sensors" asp-action="Edit" asp-route-id="@sensor.SensorId">
-                            <i class="fas fa-edit"></i> Edit
-                        </a>
-                        <a class="btn btn-danger btn-sm" asp-controller="Sensors" asp-action="Delete" asp-route-id="@sensor.SensorId" onclick="return confirm('Are You Sure?')">
-                            <i class="fas fa-trash"></i> Delete
-                        </a>
-                    </td>
-                </tr>
+<script>
+    // function to create the individual charts
+    function createChart(chartId, dataLabel, dataValue) {
+        var ctx = document.getElementById(chartId).getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: [dataLabel],
+                datasets: [{
+                    label: dataLabel,
+                    data: [dataValue],
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)', // Blue color
+                    borderColor: 'rgba(54, 162, 235, 1)', // Blue color
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                },
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
             }
-        </tbody>
-    </table>
-</div>
+        });
+    }
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    // Adding click event listener to each row
+    document.querySelectorAll(".sensor-row").forEach(function(row) {
+        row.addEventListener("click", function() {
+            var sensorId = this.getAttribute("data-id");
+            var temperature = parseFloat(this.getAttribute("data-temperature"));
+            var humidity = parseFloat(this.getAttribute("data-humidity"));
+            var smoke = parseFloat(this.getAttribute("data-smoke"));
+
+            // Toggle chart visibility
+            var chartRow = document.getElementById('chart-' + sensorId);
+            chartRow.style.display = chartRow.style.display === 'none' ? 'table-row' : 'none';
+
+            // Create the charts for the clicked row if not already created
+            if (chartRow.style.display === 'table-row') {
+                createChart('temperatureChart-' + sensorId, 'Temperature', temperature);
+                createChart('humidityChart-' + sensorId, 'Humidity', humidity);
+                createChart('smokeChart-' + sensorId, 'Smoke', smoke);
+            }
+        });
+    });
+</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
