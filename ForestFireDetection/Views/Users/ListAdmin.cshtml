@@ -23,6 +23,7 @@
         <tr>
             <td>@Html.DisplayNameFor(model=>model.Id)</td>
             <td>@Html.DisplayNameFor(Model=>Model.FirstName)</td>
+            <td>@Html.DisplayNameFor(Model=>Model.LastName)</td>
             <td>@Html.DisplayNameFor(Model=>Model.Email)</td>
             <!-- Display other properties as needed -->
             <th></th>
@@ -38,6 +39,9 @@
                 </td>
                 <td width="20%">
                     @item.FirstName
+                </td>
+                <td width="20%">
+                    @item.LastName
                 </td>
                 <td>
                     @item.Email

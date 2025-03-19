@@ -3,7 +3,7 @@
 	<form method="post" asp-action="Delete">
 		<div calss="border p-3 mt-4">
 			<div calss="row pd-2">
-				<h2 class="text-primary">@ViewData["DeletePatient"]</h2>
+				<h2 class="text-primary">Delete Fire Station</h2>
 				<hr />
 
 			</div>
@@ -14,12 +14,16 @@
 			<input asp-for="FirstName" disabled class="form-control" />
 		</div>
 		<div class="mb-3">
+			<label asp-for="LastName"></label>
+			<input asp-for="LastName" disabled class="form-control" />
+		</div>
+		<div class="mb-3">
 			<label asp-for="Email"></label>
 			<input type="email" asp-for="Email" disabled class="form-control" />
 		</div>
 
 		<button type="submit" class="btn btn-danger" style="width:150px">Delete</button>
-		<a asp-controller="PatientUser" asp-action="ListPatients" class="btn btn-secondary" style="width:150px">
+		<a asp-controller="Users" asp-action="ListFireStations" class="btn btn-secondary" style="width:150px">
 			Backto List
 		</a>
 	</form>

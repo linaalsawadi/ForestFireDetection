@@ -19,51 +19,25 @@ namespace ForestFireDetection.Controllers
 
         public UsersController(ForestFireDetectionDbContext context, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager)
         {
-            //_PatientUserRepository = patientUserRepository;
             _context = context;
             _userManager = userManager;
             _roleManager = roleManager;
         }
 
-        //[Authorize(Roles = UserRoles.Admin)]
-        //public async Task<IActionResult> Index(UserType userType = UserType.Patients)
-        //{
-        //    IEnumerable<PatientUser> users;
-
-        //    switch (userType)
-        //    {
-        //        case UserType.Patients:
-        //            users = await _userManager.GetUsersInRoleAsync(UserRoles.User);
-        //            break;
-        //        case UserType.Admins:
-        //            users = await _userManager.GetUsersInRoleAsync(UserRoles.Admin);
-        //            break;
-        //        default:
-        //            users = await _userManager.Users.ToListAsync();
-        //            break;
-        //    }
-
-        //    return View(users);
-        //}
-
         [Authorize(Roles = UserRoles.Admin)]
-        public async Task<IActionResult> ListPatients()
+        public async Task<IActionResult> ListFireStations()
         {
-           
-            // Retrieve all users that are not in the Admin role
             var users = await _userManager.Users.ToListAsync();
-            var patients = new List<ApplicationUser>();
+            var fireStations = new List<ApplicationUser>();
 
             foreach (var user in users)
             {
-                // Check if the user is not an admin
-                if (!await _userManager.IsInRoleAsync(user, UserRoles.Admin))
+                if (await _userManager.IsInRoleAsync(user, UserRoles.User))
                 {
-                    // User is not an admin, so we consider them as a patient
-                    patients.Add(user);
+                    fireStations.Add(user);
                 }
             }
-            return View(patients); // Make sure you have a corresponding view to display the list of patients
+            return View(fireStations); // Make sure you have a corresponding view to display the list of patients
         }
 
         [Authorize(Roles = UserRoles.Admin)]
@@ -74,10 +48,8 @@ namespace ForestFireDetection.Controllers
 
             foreach (var user in users)
             {
-                // Check if the user is not an admin
-                if (!await _userManager.IsInRoleAsync(user, UserRoles.User))
+                if (await _userManager.IsInRoleAsync(user, UserRoles.Admin))
                 {
-                    // User is not an admin, so we consider them as a patient
                     patients.Add(user);
                 }
             }
@@ -106,8 +78,8 @@ namespace ForestFireDetection.Controllers
                 }
                 var newUser = new ApplicationUser
                 {
-                    FirstName = user.Username,
-                    LastName = user.Username, // Last Name /////////////////////////////////////////////////////////////////////////////////////////
+                    FirstName = user.FirstName,
+                    LastName = user.LastName,
                     UserName = user.EmailAddress,
                     Email = user.EmailAddress,
                     EmailConfirmed = true  // or set based on your application logic
@@ -121,7 +93,7 @@ namespace ForestFireDetection.Controllers
                     await _userManager.AddToRoleAsync(newUser, UserRoles.User);  // Assign a default role or based on model
                 }
 
-                return RedirectToAction(nameof(ListPatients));
+                return RedirectToAction(nameof(ListFireStations));
             }
             TempData["Error"] = "entered information is not correct";
             // If we reach here, something went wrong, re-show form
@@ -168,23 +140,16 @@ namespace ForestFireDetection.Controllers
             //getting the user role
             var isAdmin = await _userManager.IsInRoleAsync(user, "Admin");
             // Update the user's properties
-            user.FirstName = model.FirstName; // Corrected: Assigning model.Name to user.Name
-            user.LastName = model.LastName; ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            user.UserName = model.Email; // Assuming you want to keep UserName and Email same
+            user.FirstName = model.FirstName;
+            user.LastName = model.LastName; 
+            user.UserName = model.Email;
             user.Email = model.Email;
 
             var result = await _userManager.UpdateAsync(user);
             if (result.Succeeded)
             {
-
-                //checking the user`s role to redirect to its own list page
-                if (isAdmin)
-                {
-                    return RedirectToAction(nameof(ListAdmin));
-                }
-                else
-                    return RedirectToAction(nameof(ListPatients));
-            }
+				return RedirectToAction(nameof(ListFireStations));
+			}
             else
             {
                 // Handle errors
@@ -219,20 +184,12 @@ namespace ForestFireDetection.Controllers
         [Authorize(Roles = UserRoles.Admin)]
         public async Task<IActionResult> Delete(ApplicationUser User)
         {
-
-            var isAdmin = await _userManager.IsInRoleAsync(User, "Admin");
-
             var user1 = await _userManager.FindByIdAsync(User.Id);
             _context.Remove(user1);
             var result = _context.SaveChanges();
-            //checking the user`s role to redirect to its own list page
-            if (isAdmin)
-            {
-                return RedirectToAction(nameof(ListAdmin));
-            }
-            else
-                return RedirectToAction(nameof(ListPatients));
-        }
+			//checking the user`s role to redirect to its own list page
+			return RedirectToAction(nameof(ListFireStations));
+		}
 
         [HttpGet]
         [Authorize(Roles = UserRoles.Admin)]
@@ -271,25 +228,16 @@ namespace ForestFireDetection.Controllers
             }
 
             // Update the user's properties
-            user.FirstName = model.FirstName; // Corrected: Assigning model.Name to user.Name
-            user.LastName = model.LastName; /////////////////////////////////////////////////////////////////////////////////
-            user.UserName = model.Email; // Assuming you want to keep UserName and Email same
+            user.FirstName = model.FirstName;
+            user.LastName = model.LastName; 
+            user.UserName = model.Email;
             user.Email = model.Email;
 
             var result = await _userManager.UpdateAsync(user);
             if (result.Succeeded)
             {
-                // Checking the user's role to redirect to the appropriate list page
-                var isAdmin = await _userManager.IsInRoleAsync(user, "Admin");
-                if (isAdmin)
-                {
-                    return RedirectToAction(nameof(ListAdmin));
-                }
-                else
-                {
-                    return RedirectToAction(nameof(ListPatients));
-                }
-            }
+				return RedirectToAction(nameof(ListAdmin));
+			}
             else
             {
                 // Handle errors
@@ -322,28 +270,19 @@ namespace ForestFireDetection.Controllers
         [Authorize(Roles = UserRoles.Admin)]
         public async Task<IActionResult> DeleteAdmin(ApplicationUser User)
         {
-
-            var isAdmin = await _userManager.IsInRoleAsync(User, "Admin");
-
             var user1 = await _userManager.FindByIdAsync(User.Id);
             _context.Remove(user1);
             var result = _context.SaveChanges();
-            //checking the user`s role to redirect to its own list page
-            if (isAdmin)
-            {
-                return RedirectToAction(nameof(ListAdmin));
-            }
-            else
-                return RedirectToAction(nameof(ListPatients));
-        }
+			return RedirectToAction(nameof(ListAdmin));
+		}
 
         [HttpGet]
         [Authorize(Roles = UserRoles.Admin)]
-
         public IActionResult CreateAdmin()
         {
             return View();
         }
+
         [Authorize(Roles = UserRoles.Admin)]
         [HttpPost]
         public async Task<IActionResult> CreateAdmin(RegisterViewModel user)
@@ -359,8 +298,8 @@ namespace ForestFireDetection.Controllers
                 }
                 var newUser = new ApplicationUser
                 {
-                    FirstName = user.Username,
-                    LastName = user.Username, /////////////////////////////////////////////////////////////////////////////////
+                    FirstName = user.FirstName,
+                    LastName = user.LastName, 
                     Email = user.EmailAddress,
                     UserName = user.EmailAddress,
                     EmailConfirmed = true  // or set based on your application logic

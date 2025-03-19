@@ -3,15 +3,19 @@
 	<form method="post" asp-action="DeleteAdmin">
 		<div calss="border p-3 mt-4">
 			<div calss="row pd-2">
-				<h2 class="text-primary">Delete Patient</h2>
+				<h2 class="text-primary">Delete Admin</h2>
 				<hr />
 
 			</div>
 			
 		</div>
 		<div class="mb-3">
-			<label asp-for="UserName"></label>
-			<input asp-for="UserName" disabled class="form-control" />
+			<label asp-for="FirstName"></label>
+			<input asp-for="FirstName" disabled class="form-control" />
+		</div>
+		<div class="mb-3">
+			<label asp-for="LastName"></label>
+			<input asp-for="LastName" disabled class="form-control" />
 		</div>
 		<div class="mb-3">
 			<label asp-for="Email"></label>
@@ -19,7 +23,7 @@
 		</div>
 
 		<button type="submit" class="btn btn-danger" style="width:150px">Delete</button>
-		<a asp-controller="PatientUser" asp-action="ListAdmin" class="btn btn-secondary" style="width:150px">
+		<a asp-controller="Users" asp-action="ListAdmin" class="btn btn-secondary" style="width:150px">
 			Backto List
 		</a>
 	</form>

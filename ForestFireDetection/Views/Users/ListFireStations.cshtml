@@ -7,11 +7,11 @@
 <div class="container p-3 ">
     <div class="row pt-4">
         <div class="col-6">
-            <h2 class="text-primary">Patients List</h2>
+            <h2 class="text-primary">Fire Stations List</h2>
         </div>
         <div class="col-6 text-right">
             <a asp-controller="Users" asp-action="Create" class="btn btn-primary">
-                <i class="bi bi-person-add"></i> &nbsp; Adda Patient
+                <i class="bi bi-person-add"></i> &nbsp; Adda Fire Station
             </a>
 
         </div>
@@ -24,6 +24,7 @@
         <tr>
             <td>@Html.DisplayNameFor(model=>model.Id)</td>
             <td>@Html.DisplayNameFor(Model=>Model.FirstName)</td>
+            <td>@Html.DisplayNameFor(Model=>Model.LastName)</td>
             <td>@Html.DisplayNameFor(Model=>Model.Email)</td>
             <!-- Display other properties as needed -->
             <th></th>
@@ -39,7 +40,10 @@
                 </td>
                 <td width="20%">
                     @item.FirstName
-                </td
+                </td>
+                <td width="20%">
+                    @item.LastName
+                </td>
                 <td>
                     @item.Email
                 </td>

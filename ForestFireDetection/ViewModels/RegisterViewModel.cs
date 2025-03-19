@@ -9,12 +9,18 @@ namespace ForestFireDetection.ViewModels
         [Required(ErrorMessage = "Email address is required")]
         public string EmailAddress { get; set; }
 
-        [Required(ErrorMessage = "Username is required")]
-        [Display(Name = "Username")]
-        public string Username { get; set; }
+        [Required(ErrorMessage = "FirstName is required")]
+        [Display(Name = "FirstName")]
+        public string FirstName { get; set; }
+
+		[Required(ErrorMessage = "LastName is required")]
+		[Display(Name = "LastName")]
+		public string LastName { get; set; }
 
 
-        [Required]
+
+
+		[Required]
         public string Password { get; set; }
         [Display(Name = "Confirm password")]
         [Required(ErrorMessage = "Confirm password is required")]

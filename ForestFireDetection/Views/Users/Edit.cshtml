@@ -6,7 +6,7 @@
 
 	<div class="border p-3 mt-4">
 		<div class="row pd-2">
-			<h2 class="text-primary">@ViewData["EditPatient"]</h2>
+			<h2 class="text-primary">Edit Fire Station</h2>
 			<hr />
 
 		</div>
@@ -17,12 +17,16 @@
 		<input asp-for="FirstName" class="form-control" />
 	</div>
 	<div class="mb-3">
+		<label asp-for="LastName" class="form-label"></label>
+		<input asp-for="LastName" class="form-control" />
+	</div>
+	<div class="mb-3">
 		<label asp-for="Email" class="form-label"></label>
 		<input asp-for="Email" class="form-control" />
 	</div>
 
 	<button type="submit" class="btn btn-primary" style="width:150px">Update</button>
-	<a asp-controller="Users" asp-action="ListPatients" class="btn btn-secondary" style="width:150px">
+	<a asp-controller="Users" asp-action="ListFireStations" class="btn btn-secondary" style="width:150px">
 		Back to list
 	</a>
 </form>
