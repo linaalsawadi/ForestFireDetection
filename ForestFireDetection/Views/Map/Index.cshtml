@@ -1,29 +1,14 @@
-﻿@{
-    ViewData["Title"] = "Fire Monitoring Map";
-}
+﻿<div id="map" style="height: 600px;"></div>
 
-<!DOCTYPE html>
-<html lang="ar">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@ViewData["Title"]</title>
 
-    <!-- استيراد Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    let dangerLatLng = null;
 
-    <!-- استيراد ملف التنسيقات -->
-    <link rel="stylesheet" href="~/css/styles.css" />
-</head>
-<body>
+// إعداد الخريطة على جامعة سكاريا
+var map = L.map('map').setView([40.7411, 30.3331], 16);
 
-    <h2>Fire Monitoring System - Sakarya University</h2>
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors'
+}).addTo(map);
 
-    <div id="map"></div>
-
-    <!-- استيراد ملف JavaScript للخريطة -->
-    <script src="~/js/map.js"></script>
-
-</body>
-</html>
+</script>

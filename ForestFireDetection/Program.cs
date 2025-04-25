@@ -1,8 +1,10 @@
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using ForestFireDetection.Data;
 using ForestFireDetection.Models;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.SignalR;
+using ForestFireDetection.Hubs;
 
 public class Program
 {
@@ -17,7 +19,6 @@ public class Program
         builder.Services.AddControllersWithViews();
         builder.Services.AddRazorPages();
 
-
         // Add ASP.NET Core Identity services
         builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
         {
@@ -28,10 +29,14 @@ public class Program
             options.Password.RequireUppercase = false;
             options.Password.RequireLowercase = false;
         }).AddEntityFrameworkStores<ForestFireDetectionDbContext>();
+
         builder.Services.AddMemoryCache();
         builder.Services.AddSession();
         builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                .AddCookie();
+
+        // SignalR
+        builder.Services.AddSignalR();
 
         var app = builder.Build();
 
@@ -53,12 +58,14 @@ public class Program
         app.UseAuthentication();
         app.UseAuthorization();
 
+        // SignalR Endpoints
+        app.MapHub<AlertHub>("/alertHub");
 
         app.MapControllerRoute(
             name: "default",
             pattern: "{controller=Home}/{action=Index}/{id?}");
         app.MapRazorPages();
-        
+
         app.Run();
     }
 }

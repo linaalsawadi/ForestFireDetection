@@ -1,4 +1,4 @@
-html {
+﻿html {
   font-size: 14px;
 }
 
@@ -16,3 +16,74 @@ html {
 body {
   margin-bottom: 60px;
 }
+.alert-popup {
+    position: fixed;
+    bottom: 0; /* يثبت الشريط في أسفل الصفحة */
+    left: 0; /* يبدأ من الجهة اليسرى */
+    right: 0; /* ينتهي عند الجهة اليمنى */
+    background: #f8d7da; /* خلفية حمراء فاتحة للتنبيه */
+    border-top: 3px solid red; /* حدود علوية حمراء */
+    border-radius: 8px 8px 0 0; /* زوايا دائرية من الأعلى فقط */
+    padding: 10px 20px;
+    z-index: 10001; /* تأكد من ظهور الشريط فوق جميع العناصر */
+    display: none; /* مخفي بشكل افتراضي */
+    flex-direction: row; /* توزيع العناصر بشكل أفقي */
+    justify-content: space-between; /* توزيع المحتوى بشكل متساوي */
+    align-items: center; /* محاذاة العناصر في المنتصف عموديًا */
+    width: 100%; /* عرض الشريط يغطي العرض بالكامل */
+}
+
+    .alert-popup.show {
+        display: flex; /* يظهر الشريط عند إضافة الـ class "show" */
+    }
+
+    .alert-popup .alert-text {
+        display: flex;
+        gap: 15px; /* المسافة بين النصوص */
+        align-items: center;
+        flex-grow: 1; /* السماح للمحتوى بتمدد المساحة المتبقية */
+    }
+
+    .alert-popup .alert-actions {
+        display: flex;
+        gap: 10px; /* المسافة بين الأزرار */
+    }
+
+    .alert-popup button {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+    }
+
+        .alert-popup button:hover {
+            opacity: 0.8;
+        }
+
+/* الخلفية المظلمة */
+#alert-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.3); /* خلفية مظللة */
+    z-index: 10000;
+    display: none; /* إخفاء الخلفية بشكل افتراضي */
+}
+
+    #alert-overlay.blink {
+        animation: blinkDanger 1s infinite;
+    }
+
+@keyframes blinkDanger {
+    0%, 100% {
+        background-color: rgba(0, 0, 0, 0.5);
+    }
+
+    50% {
+        background-color: rgba(139, 0, 0, 0.6);
+    }
+}
+

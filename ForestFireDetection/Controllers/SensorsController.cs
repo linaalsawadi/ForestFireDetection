@@ -43,10 +43,10 @@ namespace ForestFireDetection.Controllers
 
             Sensor sensornew = new Sensor()
             {
-            SensorLocation = sensor.SensorLocation,
-            SensorState = sensor.SensorState,
-            SensorPositioningDate = sensor.SensorPositioningDate,
-            SensorDangerSituation = sensor.SensorDangerSituation,
+            //SensorLocation = sensor.Location,
+            //SensorState = sensor.SensorState,
+            //SensorPositioningDate = sensor.SensorPositioningDate,
+            //SensorDangerSituation = sensor.SensorDangerSituation,
             };
 
             context.Sensors.Add(sensornew);
@@ -65,9 +65,9 @@ namespace ForestFireDetection.Controllers
 
             Sensor sensornew = new Sensor()
             {
-                SensorLocation = sensor.SensorLocation,
-                SensorPositioningDate = sensor.SensorPositioningDate,
-                SensorDangerSituation = sensor.SensorDangerSituation,
+                //SensorLocation = sensor.SensorLocation,
+                //SensorPositioningDate = sensor.SensorPositioningDate,
+                //SensorDangerSituation = sensor.SensorDangerSituation,
             };
 
             ViewData["SensorId"] = sensor.SensorId;
@@ -95,9 +95,9 @@ namespace ForestFireDetection.Controllers
                 return View(sensornew);
             }
 
-            sensor.SensorLocation = sensornew.SensorLocation;
-            sensor.SensorPositioningDate = sensornew.SensorPositioningDate;
-            sensor.SensorDangerSituation = sensornew.SensorDangerSituation;
+            //sensor.SensorLocation = sensornew.SensorLocation;
+            //sensor.SensorPositioningDate = sensornew.SensorPositioningDate;
+            //sensor.SensorDangerSituation = sensornew.SensorDangerSituation;
 
             context.SaveChanges();
             return RedirectToAction("Index", "Sensors");

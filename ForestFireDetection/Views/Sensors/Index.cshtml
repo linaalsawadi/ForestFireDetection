@@ -1,4 +1,17 @@
-﻿<!-- /.row -->
+﻿<div class="container p-3 ">
+    <div class="row pt-4">
+        <div class="col-6">
+            <h2 class="text-primary"> Sensors List </h2>
+        </div>
+        <div class="col-6 text-right">
+            <a asp-controller="Users" asp-action="CreateAdmin" class="btn btn-primary">
+                <i class="bi bi-person-add"></i> &nbsp; Add a Sensor
+            </a>
+        </div>
+    </div>
+
+</div>
+
 <div class="row">
     <div class="col-12">
         <div class="card">
@@ -8,66 +21,129 @@
             <!-- ./card-header -->
             <div class="card-body">
                 <table class="table table-bordered table-hover">
-                    <thead class="table-dark">
+                    <thead>
                         <tr>
-                            <th>Sensor ID</th>
-                            <th>Location</th>
-                            <th>State</th>
-                            <th>Positioning Date</th>
-                            <th>Danger</th>
-                            <th>Temperature</th>
-                            <th>Humidity</th>
-                            <th>Smoke</th>
-                            <th>ِActions</th>
+                            <th>#</th>
+                            <th>User</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Reason</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var sensor in Model)
-                        {
-                            <tr class="sensor-row" data-id="@sensor.SensorId"
-                                data-temperature="@sensor.Temperature"
-                                data-humidity="@sensor.Humidity"
-                                data-smoke="@sensor.Smoke">
-                                <td>@sensor.SensorId</td>
-                                <td>@sensor.SensorLocation</td>
-                                <td>@sensor.SensorState</td>
-                                <td>@sensor.SensorPositioningDate.ToString("MM/dd/yyyy")</td>
-                                <td>@sensor.SensorDangerSituation</td>
-                                <td>@sensor.Temperature</td>
-                                <td>@sensor.Humidity</td>
-                                <td>@sensor.Smoke</td>
-                                <td class="text-nowrap">
-                                    <a class="btn btn-primary btn-sm me-2"
-                                       asp-controller="Sensors" asp-action="Edit"
-                                       asp-route-id="@sensor.SensorId">
-                                        <i class="fas fa-edit"></i> Edit
-                                    </a>
-                                    <a class="btn btn-danger btn-sm"
-                                       asp-controller="Sensors" asp-action="Delete"
-                                       asp-route-id="@sensor.SensorId"
-                                       onclick="return confirm('Are You Sure?')">
-                                        <i class="fas fa-trash"></i> Delete
-                                    </a>
-                                </td>
-                            </tr>
-                            <tr class="expandable-body chart-row" id="chart-@sensor.SensorId" style="display: none;">
-                                <td colspan="9">
-                                    <div class="chart-container d-flex justify-content-between">
-                                        <div class="chart-box">
-                                            <canvas id="temperatureChart-@sensor.SensorId" width="300" height="200"></canvas>
-                                        </div>
-                                        <div class="chart-box">
-                                            <canvas id="humidityChart-@sensor.SensorId" width="300" height="200"></canvas>
-                                        </div>
-                                        <div class="chart-box">
-                                            <canvas id="smokeChart-@sensor.SensorId" width="300" height="200"></canvas>
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                        }
+                        <tr data-widget="expandable-table" aria-expanded="false">
+                            <td>183</td>
+                            <td>John Doe</td>
+                            <td>11-7-2014</td>
+                            <td>Approved</td>
+                            <td>Bacon ipsum dolor sit amet salami venison chicken flank fatback doner.</td>
+                        </tr>
+                        <tr class="expandable-body d-none">
+                            <td colspan="5">
+                                <p style="display: none;">
+                                    Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.
+                                </p>
+                            </td>
+                        </tr>
+                        <tr data-widget="expandable-table" aria-expanded="false">
+                            <td>219</td>
+                            <td>Alexander Pierce</td>
+                            <td>11-7-2014</td>
+                            <td>Pending</td>
+                            <td>Bacon ipsum dolor sit amet salami venison chicken flank fatback doner.</td>
+                        </tr>
+                        <tr class="expandable-body">
+                            <td colspan="5">
+                                <p>
+                                    Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.
+                                </p>
+                            </td>
+                        </tr>
+                        <tr data-widget="expandable-table" aria-expanded="false">
+                            <td>657</td>
+                            <td>Alexander Pierce</td>
+                            <td>11-7-2014</td>
+                            <td>Approved</td>
+                            <td>Bacon ipsum dolor sit amet salami venison chicken flank fatback doner.</td>
+                        </tr>
+                        <tr class="expandable-body">
+                            <td colspan="5">
+                                <p>
+                                    Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.
+                                </p>
+                            </td>
+                        </tr>
+                        <tr data-widget="expandable-table" aria-expanded="false">
+                            <td>175</td>
+                            <td>Mike Doe</td>
+                            <td>11-7-2014</td>
+                            <td>Denied</td>
+                            <td>Bacon ipsum dolor sit amet salami venison chicken flank fatback doner.</td>
+                        </tr>
+                        <tr class="expandable-body d-none">
+                            <td colspan="5">
+                                <p style="display: none;">
+                                    Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.
+                                </p>
+                            </td>
+                        </tr>
+                        <tr data-widget="expandable-table" aria-expanded="false">
+                            <td>134</td>
+                            <td>Jim Doe</td>
+                            <td>11-7-2014</td>
+                            <td>Approved</td>
+                            <td>Bacon ipsum dolor sit amet salami venison chicken flank fatback doner.</td>
+                        </tr>
+                        <tr class="expandable-body d-none">
+                            <td colspan="5">
+                                <p style="display: none;">
+                                    Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.
+                                </p>
+                            </td>
+                        </tr>
+                        <tr data-widget="expandable-table" aria-expanded="false">
+                            <td>494</td>
+                            <td>Victoria Doe</td>
+                            <td>11-7-2014</td>
+                            <td>Pending</td>
+                            <td>Bacon ipsum dolor sit amet salami venison chicken flank fatback doner.</td>
+                        </tr>
+                        <tr class="expandable-body d-none">
+                            <td colspan="5">
+                                <p style="display: none;">
+                                    Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.
+                                </p>
+                            </td>
+                        </tr>
+                        <tr data-widget="expandable-table" aria-expanded="false">
+                            <td>832</td>
+                            <td>Michael Doe</td>
+                            <td>11-7-2014</td>
+                            <td>Approved</td>
+                            <td>Bacon ipsum dolor sit amet salami venison chicken flank fatback doner.</td>
+                        </tr>
+                        <tr class="expandable-body d-none">
+                            <td colspan="5">
+                                <p style="display: none;">
+                                    Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.
+                                </p>
+                            </td>
+                        </tr>
+                        <tr data-widget="expandable-table" aria-expanded="false">
+                            <td>982</td>
+                            <td>Rocky Doe</td>
+                            <td>11-7-2014</td>
+                            <td>Denied</td>
+                            <td>Bacon ipsum dolor sit amet salami venison chicken flank fatback doner.</td>
+                        </tr>
+                        <tr class="expandable-body d-none">
+                            <td colspan="5">
+                                <p style="display: none;">
+                                    Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.
+                                </p>
+                            </td>
+                        </tr>
                     </tbody>
-
                 </table>
             </div>
             <!-- /.card-body -->
@@ -76,57 +152,3 @@
     </div>
 </div>
 
-<script>
-    // function to create the individual charts
-    function createChart(chartId, dataLabel, dataValue) {
-        var ctx = document.getElementById(chartId).getContext('2d');
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: [dataLabel],
-                datasets: [{
-                    label: dataLabel,
-                    data: [dataValue],
-                    backgroundColor: 'rgba(54, 162, 235, 0.2)', // Blue color
-                    borderColor: 'rgba(54, 162, 235, 1)', // Blue color
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                },
-                responsive: true,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                }
-            }
-        });
-    }
-
-    // Adding click event listener to each row
-    document.querySelectorAll(".sensor-row").forEach(function(row) {
-        row.addEventListener("click", function() {
-            var sensorId = this.getAttribute("data-id");
-            var temperature = parseFloat(this.getAttribute("data-temperature"));
-            var humidity = parseFloat(this.getAttribute("data-humidity"));
-            var smoke = parseFloat(this.getAttribute("data-smoke"));
-
-            // Toggle chart visibility
-            var chartRow = document.getElementById('chart-' + sensorId);
-            chartRow.style.display = chartRow.style.display === 'none' ? 'table-row' : 'none';
-
-            // Create the charts for the clicked row if not already created
-            if (chartRow.style.display === 'table-row') {
-                createChart('temperatureChart-' + sensorId, 'Temperature', temperature);
-                createChart('humidityChart-' + sensorId, 'Humidity', humidity);
-                createChart('smokeChart-' + sensorId, 'Smoke', smoke);
-            }
-        });
-    });
-</script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
