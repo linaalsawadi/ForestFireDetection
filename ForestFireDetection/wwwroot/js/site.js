@@ -1,8 +1,20 @@
-﻿async function logMovies() {
-    const response = await fetch("https://localhost:7188/api/DoctorApi");
-    const data = await response.json();
-    console.log(data)
-    
-    document.querySelector("#getL").innerHTML = data[1].name ;
-}
-logMovies();
+﻿const connection = new signalR.HubConnectionBuilder()
+    .withUrl("/alarmHub")
+    .build();
+
+connection.on("NewAlarm", function (alarm) {
+    // عرض التنبيه على الشاشة
+    console.log("New Alarm Received:", alarm);
+
+    // مثال: عرض نافذة تنبيه
+    alert(`🚨 Fire Alert!\nLocation: ${alarm.location}\nTemperature: ${alarm.temperature}°C\nSmoke: ${alarm.smoke}`);
+});
+
+connection.start().catch(err => console.error(err));
+
+
+
+
+
+
+
