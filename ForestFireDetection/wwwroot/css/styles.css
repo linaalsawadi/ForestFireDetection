@@ -8,19 +8,6 @@ html {
   }
 }
 
-html {
-  position: relative;
-  min-height: 100%;
-}
-body {
-    font-family: Arial, sans-serif;
-    text-align: center;
-    margin: 20px;
-}
-
-h2 {
-    color: #333;
-}
 
 #map {
     height: 500px;

@@ -1,4 +1,4 @@
-﻿using ForestFireDetection.Data;
+using ForestFireDetection.Data;
 using ForestFireDetection.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 
