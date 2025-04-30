@@ -2,9 +2,7 @@
 
 namespace ForestFireDetection.Hubs
 {
-    public class AlertHub : Hub
+    public class MapHub : Hub   
     {
-        
     }
-
 }

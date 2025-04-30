@@ -1,14 +1,42 @@
-﻿<div id="map" style="height: 600px;"></div>
+﻿@model List<ForestFireDetection.ViewModels.SensorWithLatestDataViewModel>
 
+@{
+    ViewData["Title"] = "Map";
+}
 
+<!-- عنصر الخريطة -->
+<div id="map" style="height: 600px;"></div>
+
+<!-- تمرير بيانات ViewBag إلى JavaScript -->
 <script>
-    let dangerLatLng = null;
-
-// إعداد الخريطة على جامعة سكاريا
-var map = L.map('map').setView([40.7411, 30.3331], 16);
-
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap contributors'
-}).addTo(map);
-
+    window.centerLat = '@ViewBag.CenterLat';
+    window.centerLng = '@ViewBag.CenterLng';
+    window.selectedSensorId = '@ViewBag.SensorId';
+    window.sensorMarkers = {};
 </script>
+
+@section Scripts {
+    <!-- ✅ أولًا: تحميل map.js الذي يحتوي على updateSensorOnMap -->
+    <script src="~/js/map.js"></script>
+
+    <!-- ✅ ثم: بعد التأكد من تحميل map.js، ننشئ الماركرات -->
+    <script>
+        window.addEventListener('load', function () {
+        @foreach (var sensor in Model)
+        {
+            <text>
+                    updateSensorOnMap({
+                        sensorId: "@sensor.SensorId",
+                        latitude: @sensor.Latitude,
+                        longitude: @sensor.Longitude,
+                        temperature: @sensor.Temperature,
+                        humidity: @sensor.Humidity,
+                        smoke: @sensor.Smoke,
+                        timestamp: "@sensor.Timestamp.ToString("o")",
+                        sensorState: "@sensor.SensorState"
+                    });
+            </text>
+        }
+                });
+    </script>
+}

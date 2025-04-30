@@ -2,7 +2,7 @@
     .withUrl("/alertHub")
     .build();
 
-connection.on("NewAlarm", function (alert) {
+connection.on("NewAlert", function (alert) {
     showAlert(alert);
 });
 
@@ -11,7 +11,6 @@ connection.start().catch(function (err) {
 });
 
 function showAlert(alert) {
-    // تشغيل صوت الإنذار
     const sound = document.getElementById("fire-sound");
     if (sound) {
         sound.play().catch(err => {
@@ -19,7 +18,6 @@ function showAlert(alert) {
         });
     }
 
-    // إنشاء عنصر الإنذار إذا غير موجود
     let popup = document.getElementById("alert-popup");
     if (!popup) {
         popup = document.createElement("div");
@@ -37,16 +35,20 @@ function showAlert(alert) {
             <span><b>Location:</b> (${alert.latitude}, ${alert.longitude})</span>
         </div>
         <div class="alert-actions">
-             <button onclick="clearAlert()" class="btn btn-secondary me-2">Clear Alert</button>
-            <button onclick="zoomToSensor(${alert.latitude}, ${alert.longitude})" class="btn btn-primary me-2">Zoom to Sensor</button>
+            <button onclick="clearAlert()" class="btn btn-secondary me-2">Clear Alert</button>
+            <button onclick='zoomToSensorFromAlert(
+                ${alert.latitude}, 
+                ${alert.longitude}, 
+                "${alert.sensorId}", 
+                ${JSON.stringify(alert).replace(/"/g, '&quot;')}
+            )' class="btn btn-primary me-2">Zoom to Sensor
+            </button>
             <button onclick="acknowledge('${alert.id}')" class="btn btn-danger">Acknowledge Alert</button>
         </div>
     `;
 
-    // عرض الإنذار
     popup.classList.add("show");
 
-    // عرض الخلفية المظللة
     let overlay = document.getElementById("alert-overlay");
     if (!overlay) {
         overlay = document.createElement("div");
@@ -67,7 +69,6 @@ function clearAlert() {
         overlay.style.display = "none";
     }
 
-    // إيقاف الصوت
     const sound = document.getElementById("fire-sound");
     if (sound) {
         sound.pause();
@@ -76,9 +77,27 @@ function clearAlert() {
 }
 
 function acknowledge(alertId) {
-    // فيك تبعت AJAX لو بدك تحدث الحالة من "NotReviewed" لـ "UnderReview"
     console.log("Acknowledged alert:", alertId);
     alert("Alert acknowledged by user.");
-
     clearAlert();
+}
+
+function zoomToSensorFromAlert(latitude, longitude, sensorId, alert) {
+    sessionStorage.setItem("pendingAlert", JSON.stringify(alert));
+    sessionStorage.setItem("zoomTarget", JSON.stringify({ latitude, longitude, sensorId }));
+
+    const url = `/Map/Index`;
+    window.location.href = url;
+}
+
+// ✅ استرجاع الإنذار عند فتح صفحة جديدة (مثل /Map/Index)
+const alertJson = sessionStorage.getItem("pendingAlert");
+if (alertJson) {
+    try {
+        const alert = JSON.parse(alertJson);
+        showAlert(alert);
+        sessionStorage.removeItem("pendingAlert");
+    } catch (e) {
+        console.warn("❌ Failed to parse pending alert:", e);
+    }
 }

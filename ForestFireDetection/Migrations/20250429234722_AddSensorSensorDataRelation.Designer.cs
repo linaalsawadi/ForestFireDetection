@@ -4,6 +4,7 @@ using ForestFireDetection.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ForestFireDetection.Migrations
 {
     [DbContext(typeof(ForestFireDetectionDbContext))]
-    partial class ForestFireDetectionDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250429234722_AddSensorSensorDataRelation")]
+    partial class AddSensorSensorDataRelation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
