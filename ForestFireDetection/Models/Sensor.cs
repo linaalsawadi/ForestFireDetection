@@ -4,13 +4,13 @@ namespace ForestFireDetection.Models
 {
     public class Sensor
     {
-        [Required]
+        [Key]
         public Guid SensorId { get; set; }
-        [Required]
-        [MaxLength(6)]
-        public string SensorState { get; set; }//Explain if the sensor is green or yellow or red or gri
-        [Required]
+
+        public string SensorState { get; set; }
         public DateTime SensorPositioningDate { get; set; }
-        public bool SensorDangerSituation { get; set; } = false;//if there is a fire true if not 
+        public bool SensorDangerSituation { get; set; }
+
+        public ICollection<SensorData> DataHistory { get; set; }
     }
 }

@@ -32,6 +32,7 @@ public class Program
 
         builder.Services.AddMemoryCache();
         builder.Services.AddSession();
+        builder.Services.AddScoped<MqttService>();
         builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                .AddCookie();
 
@@ -58,8 +59,16 @@ public class Program
         app.UseAuthentication();
         app.UseAuthorization();
 
+        app.Lifetime.ApplicationStarted.Register(async () =>
+        {
+            using var scope = app.Services.CreateScope(); 
+            var mqtt = scope.ServiceProvider.GetRequiredService<MqttService>();
+            await mqtt.StartAsync();
+        });
+
         // SignalR Endpoints
         app.MapHub<AlertHub>("/alertHub");
+        app.MapHub<MapHub>("/mapHub");
 
         app.MapControllerRoute(
             name: "default",
