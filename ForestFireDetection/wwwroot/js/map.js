@@ -31,7 +31,7 @@
 
             sessionStorage.removeItem("zoomTarget"); // نزيلها بعد الاستخدام
         } catch (e) {
-            console.warn("❌ Failed to parse zoomTarget:", e);
+            console.warn("Failed to parse zoomTarget:", e);
         }
     }
 
