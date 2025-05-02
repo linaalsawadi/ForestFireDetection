@@ -1,32 +1,39 @@
 ﻿﻿@using ForestFireDetection.Data;
 @model ForestFireDetection.Models.ApplicationUser
 
-<form asp-controller="Users" asp-action="Edit" method="post" class="pt-5">
-	<input asp-for="Id" type="hidden" />
+@{
+	ViewData["Title"] = "Edit Fire Station";
+}
 
-	<div class="border p-3 mt-4">
-		<div class="row pd-2">
-			<h2 class="text-primary">Edit Fire Station</h2>
-			<hr />
+<div class="row ">
+	<div class="card mt-3">
 
+		<div class="card-header">
+			<h3 class="card-title"><i class="fas fa-fire-extinguisher"></i> Edit Fire Station</h3>
+		</div>
+		<div class="card-body">
+
+			<form asp-controller="Users" asp-action="Edit" method="post">
+				<input asp-for="Id" type="hidden" />
+				<div class="mb-3">
+					<label asp-for="FirstName" class="form-label"></label>
+					<input asp-for="FirstName" class="form-control" />
+				</div>
+				<div class="mb-3">
+					<label asp-for="LastName" class="form-label"></label>
+					<input asp-for="LastName" class="form-control" />
+				</div>
+				<div class="mb-3">
+					<label asp-for="Email" class="form-label"></label>
+					<input asp-for="Email" class="form-control" />
+				</div>
+
+				<button type="submit" class="btn btn-black btn-outline-success" style="width:150px">Update</button>
+				<a asp-controller="Users" asp-action="ListFireStations" class="btn btn-secondary" style="width:150px">
+					Back to list
+				</a>
+			</form>
 		</div>
 	</div>
+</div>
 
-	<div class="mb-3">
-		<label asp-for="FirstName" class="form-label"></label>
-		<input asp-for="FirstName" class="form-control" />
-	</div>
-	<div class="mb-3">
-		<label asp-for="LastName" class="form-label"></label>
-		<input asp-for="LastName" class="form-control" />
-	</div>
-	<div class="mb-3">
-		<label asp-for="Email" class="form-label"></label>
-		<input asp-for="Email" class="form-control" />
-	</div>
-
-	<button type="submit" class="btn btn-primary" style="width:150px">Update</button>
-	<a asp-controller="Users" asp-action="ListFireStations" class="btn btn-secondary" style="width:150px">
-		Back to list
-	</a>
-</form>
