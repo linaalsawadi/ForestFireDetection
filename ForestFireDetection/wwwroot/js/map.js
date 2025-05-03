@@ -1,26 +1,16 @@
 ﻿window.onload = function () {
-    // إنشاء الخريطة بعد التأكد من وجود العنصر
     const mapContainer = document.getElementById('map');
-    if (!mapContainer) {
-        console.error("❌ Map container not found.");
-        return;
-    }
+    if (!mapContainer) return;
 
-    // إنشاء الخريطة
     var map = L.map('map').setView([40.7423, 30.3338], 15);
 
-
-    // إضافة طبقة OpenStreetMap
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
-    // ✅ كائن لتخزين الماركرات حسب sensorId
     window.sensorMarkers = window.sensorMarkers || {};
 
-    // استخدم قيم URL إن وجدت للزوم على حساس معين
     let latitude, longitude, sensorId;
-
     const zoomJson = sessionStorage.getItem("zoomTarget");
     if (zoomJson) {
         try {
@@ -28,21 +18,17 @@
             latitude = zoomData.latitude;
             longitude = zoomData.longitude;
             sensorId = zoomData.sensorId;
-
-            sessionStorage.removeItem("zoomTarget"); // نزيلها بعد الاستخدام
+            sessionStorage.removeItem("zoomTarget");
         } catch (e) {
             console.warn("Failed to parse zoomTarget:", e);
         }
     }
 
-
-    // اتصال مع SignalR MapHub
     const mapHubConnection = new signalR.HubConnectionBuilder()
         .withUrl("/mapHub")
         .build();
 
     mapHubConnection.on("UpdateSensor", function (data) {
-        console.log("Update received:", data);
         updateSensorOnMap(data, map);
     });
 
@@ -50,13 +36,11 @@
         console.error("SignalR connection failed:", err.toString());
     });
 
-    // ✅ دالة تحديث أو إنشاء الماركر
     window.updateSensorOnMap = function (data, mapRef = map) {
         const sensorId = data.sensorId;
-        const sensorState = data.sensorState?.toLowerCase() || "green"; // default fallback
+        const sensorState = data.sensorState?.toLowerCase() || "green";
         const iconPath = `/icons/sensor-${sensorState}.png`;
 
-        // إنشاء الأيقونة الجديدة حسب الحالة
         const updatedIcon = L.icon({
             iconUrl: iconPath,
             iconSize: [32, 32],
@@ -64,30 +48,69 @@
             popupAnchor: [0, -32]
         });
 
-        const popupContent = `
-            <b>Sensor ID:</b> ${sensorId}<br/>
-            <b>Temp:</b> ${data.temperature} °C<br/>
-            <b>Smoke:</b> ${data.smoke}<br/>
-            <b>Humidity:</b> ${data.humidity} %<br/>
-            <b>Updated:</b> ${new Date(data.timestamp).toLocaleTimeString()}
-        `;
-
         if (sensorMarkers[sensorId]) {
-            // ✅ تحديث الموقع، المحتوى، والأيقونة
             const marker = sensorMarkers[sensorId];
             marker.setLatLng([data.latitude, data.longitude]);
-            marker.setPopupContent(popupContent);
-            marker.setIcon(updatedIcon); // ✅ تغيير الأيقونة حسب الحالة
+            marker.setIcon(updatedIcon);
         } else {
-            // إذا لم يكن موجودًا، ننشئه لأول مرة
             const marker = L.marker([data.latitude, data.longitude], { icon: updatedIcon }).addTo(map);
-            marker.bindPopup(popupContent);
+            marker.on('click', function () {
+                showSensorPanel(sensorId);
+            });
             sensorMarkers[sensorId] = marker;
         }
+
         if (latitude && longitude && sensorId) {
             map.setView([parseFloat(latitude), parseFloat(longitude)], 15);
-            sensorMarkers[sensorId].openPopup();
+            showSensorPanel(sensorId);
         }
-    }
-
+    };
 };
+
+// ✅ إظهار اللوحة الجانبية
+function showSensorPanel(sensorId) {
+    document.getElementById("sensor-title").innerText = `Sensor: ${sensorId}`;
+
+    // ✅ فتح الـ Control Sidebar الرسمي
+    document.querySelector('[data-widget="control-sidebar"]').click();
+
+    fetch(`/Sensors/GetSensorData?sensorId=${sensorId}`)
+        .then(res => res.json())
+        .then(data => {
+            drawSensorPanelCharts(sensorId, data);
+        });
+}
+// ✅ رسم الرسوم داخل اللوحة
+function drawSensorPanelCharts(sensorId, data) {
+    document.getElementById("sensor-panel-body").innerHTML = `
+        <div class="mb-4">
+            <h6><i class="fas fa-thermometer-half text-danger"></i> Temperature (°C)</h6>
+            <canvas id="tempChart-${sensorId}" height="200"></canvas>
+        </div>
+        <div class="mb-4">
+            <h6><i class="fas fa-smog text-warning"></i> Smoke</h6>
+            <canvas id="smokeChart-${sensorId}" height="200"></canvas>
+        </div>
+        <div class="mb-4">
+            <h6><i class="fas fa-tint text-info"></i> Humidity (%)</h6>
+            <canvas id="humidityChart-${sensorId}" height="200"></canvas>
+        </div>
+    `;
+
+    renderLineChart(`tempChart-${sensorId}`, "Temperature (°C)", data.map(d => ({
+        timestamp: d.timestamp,
+        value: d.temperature
+    })), "rgba(255, 99, 132, 1)");
+
+    renderLineChart(`humidityChart-${sensorId}`, "Humidity (%)", data.map(d => ({
+        timestamp: d.timestamp,
+        value: d.humidity
+    })), "rgba(54, 162, 235, 1)");
+
+    renderLineChart(`smokeChart-${sensorId}`, "Smoke", data.map(d => ({
+        timestamp: d.timestamp,
+        value: d.smoke
+    })), "rgba(255, 206, 86, 1)");
+}
+
+

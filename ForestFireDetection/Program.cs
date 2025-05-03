@@ -69,6 +69,7 @@ public class Program
         // SignalR Endpoints
         app.MapHub<AlertHub>("/alertHub");
         app.MapHub<MapHub>("/mapHub");
+        app.MapHub<ChartHub>("/chartHub");
 
         app.MapControllerRoute(
             name: "default",

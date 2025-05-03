@@ -1,3 +1,4 @@
+@using ForestFireDetection.Data
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -95,19 +96,23 @@
                 </div>
                 <nav class="mt-2">
                     <ul class="nav nav-pills nav-sidebar flex-column">
-                        <li class="nav-item">
-                            <a asp-controller="Users" asp-action="ListFireStations" class="nav-link">
-                                <i class="nav-icon fas fa-fire-extinguisher"></i><p>Fire Station</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a asp-controller="Users" asp-action="ListAdmin" class="nav-link">
-                                <i class="nav-icon fas fa-user-tie"></i><p>Admin</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a asp-controller="Sensors" asp-action="Index" class="nav-link"><i class="nav-icon fas fa-microchip"></i><p>Sensors</p></a>
-                        </li>
+                        @if (User.IsInRole(UserRoles.Admin))
+                        {
+                            <li class="nav-item">
+                                <a asp-controller="Users" asp-action="ListFireStations" class="nav-link">
+                                    <i class="nav-icon fas fa-fire-extinguisher"></i><p>Fire Station</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a asp-controller="Users" asp-action="ListAdmin" class="nav-link">
+                                    <i class="nav-icon fas fa-user-tie"></i><p>Admin</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a asp-controller="Sensors" asp-action="Index" class="nav-link"><i class="nav-icon fas fa-microchip"></i><p>Sensors</p></a>
+                            </li>
+
+                        }
                         <li class="nav-item">
                             <a asp-controller="Map" asp-action="Index" class="nav-link"><i class="nav-icon fas fa-map"></i><p>Map</p></a>
                         </li>
@@ -132,7 +137,13 @@
             </div>
         </footer>
 
-        <aside class="control-sidebar control-sidebar-dark"></aside>
+        <aside class="control-sidebar control-sidebar-dark">
+            <div class="p-3" id="control-sidebar-content">
+                <p id="sensor-title">Sensor Info</p>
+                <div id="sensor-panel-body"></div>
+            </div>
+        </aside>
+
     </div>
 
     <!-- JavaScript Libraries -->
