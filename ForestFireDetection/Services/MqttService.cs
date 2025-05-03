@@ -12,16 +12,19 @@ public class MqttService
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly IHubContext<AlertHub> _alertHub;
     private readonly IHubContext<MapHub> _mapHub;
+    private readonly IHubContext<ChartHub> _chartHub;
     private IMqttClient _mqttClient;
 
     public MqttService(
        IServiceScopeFactory scopeFactory,
         IHubContext<AlertHub> alertHub,
-        IHubContext<MapHub> mapHub)
+        IHubContext<MapHub> mapHub,
+        IHubContext<ChartHub> chartHub)
     {
         _scopeFactory = scopeFactory;
         _alertHub = alertHub;
         _mapHub = mapHub;
+        _chartHub = chartHub;
     }
 
     public async Task StartAsync()
@@ -82,6 +85,7 @@ public class MqttService
 
                 await _context.SaveChangesAsync();
 
+                // ✅ إرسال التحديث إلى الخريطة
                 await _mapHub.Clients.All.SendAsync("UpdateSensor", new
                 {
                     sensorId = data.SensorId,
@@ -94,6 +98,21 @@ public class MqttService
                     sensorState = state
                 });
 
+                // ✅ حساب عدد الحساسات لكل حالة
+                var greenCount = _context.Sensors.Count(s => s.SensorState == "green");
+                var yellowCount = _context.Sensors.Count(s => s.SensorState == "yellow");
+                var redCount = _context.Sensors.Count(s => s.SensorState == "red");
+
+                // ✅ إرسال التحديث إلى واجهة المخططات + الحالة + العدادات
+                await _chartHub.Clients.All.SendAsync("ReceiveSensorData", data.SensorId, new
+                {
+                    timestamp = data.Timestamp,
+                    temperature = data.Temperature,
+                    humidity = data.Humidity,
+                    smoke = data.Smoke
+                }, state, sensor.SensorDangerSituation, greenCount, yellowCount, redCount);
+
+                // ✅ إرسال تنبيه في حال كانت الحالة خطيرة
                 if (state != "green")
                 {
                     var alert = new Alert

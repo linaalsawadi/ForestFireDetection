@@ -1,8 +1,7 @@
-﻿const charts = {};
-const refreshIntervals = {};
+﻿// ✅ تحديث المخططات والصفوف والعدادات بالـ SignalR
+const charts = {};
 let expandedSensorIds = new Set();
 
-// تحميل الرسوم البيانية لحساس
 function loadSensorCharts(sensorId, container) {
     fetch(`/Sensors/GetSensorData?sensorId=${sensorId}`)
         .then(res => res.json())
@@ -28,25 +27,12 @@ function loadSensorCharts(sensorId, container) {
         });
 }
 
-// رسم جميع الرسوم البيانية
 function drawAllCharts(sensorId, data) {
-    renderLineChart(`tempChart-${sensorId}`, "Temperature (°C)", data.map(d => ({
-        timestamp: d.timestamp,
-        value: d.temperature
-    })), "rgba(255, 99, 132, 1)");
-
-    renderLineChart(`humidityChart-${sensorId}`, "Humidity (%)", data.map(d => ({
-        timestamp: d.timestamp,
-        value: d.humidity
-    })), "rgba(54, 162, 235, 1)");
-
-    renderLineChart(`smokeChart-${sensorId}`, "Smoke", data.map(d => ({
-        timestamp: d.timestamp,
-        value: d.smoke
-    })), "rgba(255, 206, 86, 1)");
+    renderLineChart(`tempChart-${sensorId}`, "Temperature (°C)", data.map(d => ({ timestamp: d.timestamp, value: d.temperature })), "rgba(255, 99, 132, 1)");
+    renderLineChart(`humidityChart-${sensorId}`, "Humidity (%)", data.map(d => ({ timestamp: d.timestamp, value: d.humidity })), "rgba(54, 162, 235, 1)");
+    renderLineChart(`smokeChart-${sensorId}`, "Smoke", data.map(d => ({ timestamp: d.timestamp, value: d.smoke })), "rgba(255, 206, 86, 1)");
 }
 
-// رسم رسم بياني فردي
 function renderLineChart(canvasId, label, data, color) {
     const ctx = document.getElementById(canvasId)?.getContext('2d');
     if (!ctx) return;
@@ -63,8 +49,10 @@ function renderLineChart(canvasId, label, data, color) {
                 label: label,
                 data: data.map(d => d.value),
                 borderColor: color,
-                fill: false,
-                tension: 0.3
+                backgroundColor: color.replace("1)", "0.1)"),
+                fill: true,
+                tension: 0.3,
+                pointRadius: 2
             }]
         },
         options: {
@@ -79,110 +67,137 @@ function renderLineChart(canvasId, label, data, color) {
     });
 }
 
-// تحديث كامل للواجهة والرسوم البيانية
-async function refreshDashboard() {
-    const response = await fetch('/Sensors/GetSensors');
-    const sensors = await response.json();
-    const tbody = document.querySelector("#sensorTable tbody");
+const chartHubConnection = new signalR.HubConnectionBuilder()
+    .withUrl("/chartHub")
+    .build();
 
-    // تحديث قائمة الحساسات المفتوحة
-    expandedSensorIds = new Set();
-    document.querySelectorAll('tr[aria-expanded="true"]').forEach(row => {
-        const sensorIdCell = row.children[0];
-        const sensorId = sensorIdCell?.textContent?.trim();
-        if (sensorId) expandedSensorIds.add(sensorId);
-    });
+chartHubConnection.on("ReceiveSensorData", function (sensorId, latestPoint, state, danger, totalGreen, totalYellow, totalRed) {
+    if (!expandedSensorIds.has(sensorId)) return;
 
-    tbody.innerHTML = '';
+    const chartTypes = ["temp", "humidity", "smoke"];
+    const values = {
+        temp: latestPoint.temperature,
+        humidity: latestPoint.humidity,
+        smoke: latestPoint.smoke
+    };
 
-    sensors.forEach((sensor) => {
-        const isOpen = expandedSensorIds.has(sensor.sensorId);
+    chartTypes.forEach(type => {
+        const chartId = `${type}Chart-${sensorId}`;
+        const chart = charts[chartId];
+        if (chart) {
+            const label = new Date(latestPoint.timestamp).toLocaleTimeString();
+            chart.data.labels.push(label);
+            chart.data.datasets[0].data.push(values[type]);
 
-        const row = document.createElement("tr");
-        row.setAttribute("data-widget", "expandable-table");
-        row.setAttribute("aria-expanded", isOpen ? "true" : "false");
+            if (chart.data.labels.length > 10) {
+                chart.data.labels.shift();
+                chart.data.datasets[0].data.shift();
+            }
 
-        row.innerHTML = `
-            
-            <td>${sensor.sensorId}</td>
-            <td>
-                ${sensor.sensorState === "red" ? '<span class="badge bg-danger">Critical</span>' :
-                sensor.sensorState === "yellow" ? '<span class="badge bg-warning text-dark">Warning</span>' :
-                    '<span class="badge bg-success rounded-pill">Normal</span>'}
-            </td>
-            <td>${new Date(sensor.sensorPositioningDate).toISOString().split('T')[0]}</td>
-            <td>${sensor.sensorDangerSituation ? "Yes" : "No"}</td>
-        `;
-
-        const expandable = document.createElement("tr");
-        expandable.className = isOpen ? "expandable-body" : "expandable-body d-none";
-        expandable.innerHTML = `
-            <td colspan="5">
-                <div id="charts-container-${sensor.sensorId}" class="p-2 bg-light rounded shadow-sm">
-                    <div class="text-center py-3">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                        <p class="text-muted mt-2">Loading sensor data...</p>
-                    </div>
-                </div>
-            </td>
-        `;
-
-        tbody.appendChild(row);
-        tbody.appendChild(expandable);
-
-        // إذا كان الحساس مفتوح، نعيد تحميل بياناته
-        if (isOpen) {
-            const container = expandable.querySelector('[id^="charts-container-"]');
-            loadSensorCharts(sensor.sensorId, container);
-            container.dataset.loaded = "true";
+            chart.update();
         }
     });
 
-    attachExpandableEvents();
-}
+    const row = Array.from(document.querySelectorAll("#sensorTable tbody tr"))
+        .find(tr => tr.children[0]?.textContent?.trim() === sensorId);
 
-// ربط أحداث التوسيع
+    if (row) {
+        const statusCell = row.children[1];
+        const dangerCell = row.children[3];
+
+        statusCell.innerHTML =
+            state === "red" ? '<span class="badge bg-danger rounded-pill">Critical</span>' :
+            state === "yellow" ? '<span class="badge bg-warning text-dark  rounded-pill">Warning</span>' :
+                    '<span class="badge bg-success rounded-pill">Normal</span>';
+
+        dangerCell.textContent = danger ? "Yes" : "No";
+    }
+
+    // ✅ تحديث العدادات
+    document.getElementById("count-green").textContent = totalGreen;
+    document.getElementById("count-yellow").textContent = totalYellow;
+    document.getElementById("count-red").textContent = totalRed;
+});
+
+chartHubConnection.start()
+    .then(() => console.log("✅ Connected to chartHub"))
+    .catch(err => console.error("❌ chartHub connection failed:", err));
+
 function attachExpandableEvents() {
-    const rows = document.querySelectorAll('tr[data-widget="expandable-table"]');
-
-    rows.forEach(row => {
+    document.querySelectorAll('tr[data-widget="expandable-table"]').forEach(row => {
         row.addEventListener('click', () => {
             const nextRow = row.nextElementSibling;
             const container = nextRow.querySelector('[id^="charts-container-"]');
-
-            const sensorId = container.id.replace("charts-container-", "");
-
-            if (!container.dataset.loaded) {
+            const sensorId = container?.id.replace("charts-container-", "");
+            if (sensorId && !container.dataset.loaded) {
                 loadSensorCharts(sensorId, container);
                 container.dataset.loaded = "true";
             }
-
-            // أضف الحساس إلى قائمة المفتوحين
             expandedSensorIds.add(sensorId);
         });
     });
 }
 
-// البحث
-document.addEventListener('DOMContentLoaded', () => {
-    refreshDashboard();
-    setInterval(refreshDashboard, 30000);
+refreshDashboard();
 
-    document.getElementById('sensorSearch')?.addEventListener('input', function () {
-        const value = this.value.toLowerCase();
-        const rows = document.querySelectorAll('tbody tr[data-widget="expandable-table"]');
+function refreshDashboard() {
+    fetch('/Sensors/GetSensors')
+        .then(res => res.json())
+        .then(sensors => {
+            const tbody = document.querySelector("#sensorTable tbody");
+            expandedSensorIds = new Set();
 
-        rows.forEach(row => {
-            const sensorId = row.children[0].innerText.toLowerCase();
-            const status = row.children[1].innerText.toLowerCase();
-            row.style.display = (sensorId.includes(value) || status.includes(value)) ? '' : 'none';
+            document.querySelectorAll('tr[aria-expanded="true"]').forEach(row => {
+                const sensorId = row.children[0]?.textContent?.trim();
+                if (sensorId) expandedSensorIds.add(sensorId);
+            });
 
-            const nextRow = row.nextElementSibling;
-            if (nextRow && nextRow.classList.contains('expandable-body')) {
-                nextRow.style.display = row.style.display;
-            }
+            tbody.innerHTML = '';
+
+            sensors.forEach(sensor => {
+                const isOpen = expandedSensorIds.has(sensor.sensorId);
+                const row = document.createElement("tr");
+                row.setAttribute("data-widget", "expandable-table");
+                row.setAttribute("aria-expanded", isOpen ? "true" : "false");
+
+                row.innerHTML = `
+                    <td>${sensor.sensorId}</td>
+                    <td>
+                        ${sensor.sensorState === "red" ? '<span class="badge bg-danger">Critical</span>' :
+                        sensor.sensorState === "yellow" ? '<span class="badge bg-warning text-dark">Warning</span>' :
+                            '<span class="badge bg-success rounded-pill">Normal</span>'}
+                    </td>
+                    <td>${new Date(sensor.sensorPositioningDate).toISOString().split('T')[0]}</td>
+                    <td>${sensor.sensorDangerSituation ? "Yes" : "No"}</td>
+                `;
+
+                const expandable = document.createElement("tr");
+                expandable.className = isOpen ? "expandable-body" : "expandable-body d-none";
+                expandable.innerHTML = `
+                    <td colspan="4">
+                        <div id="charts-container-${sensor.sensorId}" class="p-2 bg-light rounded shadow-sm">
+                            <div class="text-center py-3">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="text-muted mt-2">Loading sensor data...</p>
+                            </div>
+                        </div>
+                    </td>
+                `;
+
+                tbody.appendChild(row);
+                tbody.appendChild(expandable);
+
+                if (isOpen) {
+                    const container = expandable.querySelector('[id^="charts-container-"]');
+                    if (container) {
+                        loadSensorCharts(sensor.sensorId, container);
+                        container.dataset.loaded = "true";
+                    }
+                }
+            });
+
+            attachExpandableEvents();
         });
-    });
-});
+}

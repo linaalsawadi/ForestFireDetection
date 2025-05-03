@@ -15,24 +15,14 @@
             <div id="map"</div>
         </div>
     </div>
-
 </div>
 
-
-
-<!-- تمرير بيانات ViewBag إلى JavaScript -->
-<script>
-    window.centerLat = '@ViewBag.CenterLat';
-    window.centerLng = '@ViewBag.CenterLng';
-    window.selectedSensorId = '@ViewBag.SensorId';
-    window.sensorMarkers = {};
-</script>
-
 @section Scripts {
-    <!-- ✅ أولًا: تحميل map.js الذي يحتوي على updateSensorOnMap -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
     <script src="~/js/map.js"></script>
+    <script src="~/js/sensor-charts.js"></script>
 
-    <!-- ✅ ثم: بعد التأكد من تحميل map.js، ننشئ الماركرات -->
     <script>
         window.addEventListener('load', function () {
         @foreach (var sensor in Model)

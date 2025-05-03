@@ -11,15 +11,15 @@
                 <div class="d-flex align-items-center gap-3 flex-wrap">
                     <div class="d-flex align-items-center">
                         <span class="status-label text-muted me-1">Normal</span>
-                        <span class="status-badge bg-success">@Model.Count(s => s.SensorState == "green")</span>
+                        <span id="count-green" class="status-badge bg-success">@Model.Count(s => s.SensorState == "green")</span>
                     </div>
                     <div class="d-flex align-items-center">
                         <span class="status-label text-muted me-1">Warning</span>
-                        <span class="status-badge bg-warning text-dark">@Model.Count(s => s.SensorState == "yellow")</span>
+                        <span id="count-yellow" class="status-badge bg-warning text-dark">@Model.Count(s => s.SensorState == "yellow")</span>
                     </div>
                     <div class="d-flex align-items-center">
                         <span class="status-label text-muted me-1">Critical</span>
-                        <span class="status-badge bg-danger">@Model.Count(s => s.SensorState == "red")</span>
+                        <span id="count-red" class="status-badge bg-danger">@Model.Count(s => s.SensorState == "red")</span>
                     </div>
                 </div>
 
@@ -51,11 +51,11 @@
                             <td>
                                 @if (sensor.SensorState == "red")
                                 {
-                                    <span class="badge bg-danger">Critical</span>
+                                    <span class="badge bg-danger rounded-pill">Critical</span>
                                 }
                                 else if (sensor.SensorState == "yellow")
                                 {
-                                    <span class="badge bg-warning text-dark">Warning</span>
+                                    <span class="badge bg-warning text-dark rounded-pill">Warning</span>
                                 }
                                 else
                                 {

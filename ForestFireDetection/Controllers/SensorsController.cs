@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using ForestFireDetection.Data;
 using ForestFireDetection.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ForestFireDetection.Controllers
 {
@@ -14,6 +15,7 @@ namespace ForestFireDetection.Controllers
             _context = context;
         }
 
+        [Authorize(Roles = UserRoles.Admin)]
         public async Task<IActionResult> Index()
         {
             var sensors = await _context.Sensors.ToListAsync();
@@ -22,6 +24,7 @@ namespace ForestFireDetection.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = UserRoles.Admin)]
         public async Task<IActionResult> GetSensorData(Guid sensorId)
         {
             var data = await _context.SensorData
@@ -42,7 +45,8 @@ namespace ForestFireDetection.Controllers
         }
 
 		[HttpGet]
-		public async Task<IActionResult> GetSensors()
+        [Authorize(Roles = UserRoles.Admin)]
+        public async Task<IActionResult> GetSensors()
 		{
 			var sensors = await _context.Sensors.ToListAsync();
 			return Json(sensors);
