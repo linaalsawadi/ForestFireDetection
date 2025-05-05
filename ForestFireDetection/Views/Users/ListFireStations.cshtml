@@ -4,78 +4,79 @@
 }
 
 <div class="row ">
-    <div class="card mt-3">
-
-        <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-fire-extinguisher"></i></i> Fire Stations List</h3>
-        </div>
-
-        <div class="card-body">
-            <div class="row">
-
-                <div class="col mb-3">
-                    <a asp-controller="Users" asp-action="Create" class="btn btn-black btn-outline-dark">
-                        <i class="bi bi-person-add"></i> &nbsp; Add a Fire Station
-                    </a>
-                </div>
-
-                <div class="form-group" style="max-width: 250px; float: right;">
-                    <div class="input-group">
-                        <span class="input-group-text bg-white border-end-0">
-                            <i class="fas fa-search text-muted"></i>
-                        </span>
-                        <input type="text" class="form-control border-start-0" id="fireStation"
-                               placeholder="Search" aria-label="Search">
-                    </div>
-                </div>
+    <div class="col-md-12 mt-3">
+        <div class="card card-success card-outline">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-fire-extinguisher"></i> Fire Stations List</h3>
             </div>
 
-            <table class="table table-bordered table-striped" id="fireStationTable" style="width:100%">
-                <thead>
-                    <tr>
-                        <td>@Html.DisplayNameFor(model => model.Id)</td>
-                        <td>@Html.DisplayNameFor(Model => Model.FirstName)</td>
-                        <td>@Html.DisplayNameFor(Model => Model.LastName)</td>
-                        <td>@Html.DisplayNameFor(Model => Model.Email)</td>
-                        <!-- Display other properties as needed -->
-                        <th></th>
+            <div class="card-body">
+                <div class="row">
 
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in Model)
-                    {
+                    <div class="col mb-3">
+                        <a asp-controller="Users" asp-action="Create" class="btn btn-black btn-outline-dark">
+                            <i class="bi bi-person-add"></i> &nbsp; Add a Fire Station
+                        </a>
+                    </div>
+
+                    <div class="form-group" style="max-width: 250px; float: right;">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0">
+                                <i class="fas fa-search text-muted"></i>
+                            </span>
+                            <input type="text" class="form-control border-start-0" id="fireStation"
+                                   placeholder="Search" aria-label="Search">
+                        </div>
+                    </div>
+                </div>
+
+                <table class="table table-bordered table-hover" id="fireStationTable" style="width:100%">
+                    <thead>
                         <tr>
-                            <td>
-                                @item.Id
-                            </td>
-                            <td width="20%">
-                                @item.FirstName
-                            </td>
-                            <td width="20%">
-                                @item.LastName
-                            </td>
-                            <td>
-                                @item.Email
-                            </td>
-                            <td>
-                                <div class="btn-group" role="group">
-                                    <a asp-controller="Users" asp-action="Edit" asp-route-id="@item.Id"
-                                       class="btn btn-outline-dark btn-sm">
-                                        <i class="bi bi-pencil-square"></i> Edit
-                                    </a>
-                                    <a asp-controller="Users" asp-action="Delete" asp-route-id="@item.Id"
-                                       class="btn btn-outline-danger btn-sm">
-                                        <i class="bi bi-trash"></i> Delete
-                                    </a>
+                            <td>@Html.DisplayNameFor(model => model.Id)</td>
+                            <td>@Html.DisplayNameFor(Model => Model.FirstName)</td>
+                            <td>@Html.DisplayNameFor(Model => Model.LastName)</td>
+                            <td>@Html.DisplayNameFor(Model => Model.Email)</td>
+                            <!-- Display other properties as needed -->
+                            <th></th>
 
-                                </div>
-                            </td>
                         </tr>
-                    }
-                </tbody>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>
+                                    @item.Id
+                                </td>
+                                <td width="20%">
+                                    @item.FirstName
+                                </td>
+                                <td width="20%">
+                                    @item.LastName
+                                </td>
+                                <td>
+                                    @item.Email
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a asp-controller="Users" asp-action="Edit" asp-route-id="@item.Id"
+                                           class="btn btn-outline-dark btn-sm">
+                                            <i class="bi bi-pencil-square"></i> Edit
+                                        </a>
+                                        <a asp-controller="Users" asp-action="Delete" asp-route-id="@item.Id"
+                                           class="btn btn-outline-danger btn-sm">
+                                            <i class="bi bi-trash"></i> Delete
+                                        </a>
 
-            </table>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+
+                </table>
+            </div>
         </div>
     </div>
 </div>

@@ -68,14 +68,19 @@ public class MqttService
                     await _context.SaveChangesAsync();
 
                     Console.WriteLine("New sensor added: " + sensor.SensorId);
+                } else
+                {
+                    sensor.SensorPositioningDate = DateTime.UtcNow;
+                    _context.Sensors.Update(sensor);
                 }
 
                 _context.SensorData.Add(data);
+                await _context.SaveChangesAsync();
 
                 string state;
-                if (data.Temperature > 60 || data.Smoke > 80)
+                if (data.Temperature > 60 || data.Smoke > 280)
                     state = "red";
-                else if (data.Temperature > 42 || data.Smoke > 50)
+                else if (data.Temperature > 42 || data.Smoke > 250)
                     state = "yellow";
                 else
                     state = "green";
@@ -110,7 +115,7 @@ public class MqttService
                     temperature = data.Temperature,
                     humidity = data.Humidity,
                     smoke = data.Smoke
-                }, state, sensor.SensorDangerSituation, greenCount, yellowCount, redCount);
+                }, state, sensor.SensorDangerSituation, greenCount, yellowCount, redCount, sensor.SensorPositioningDate);
 
                 // ✅ إرسال تنبيه في حال كانت الحالة خطيرة
                 if (state != "green")
@@ -158,8 +163,8 @@ public class MqttService
             await _mqttClient.ConnectAsync(options);
             Console.WriteLine("Connected to HiveMQ broker.");
 
-            await _mqttClient.SubscribeAsync("forest/sensors");
-            Console.WriteLine("Subscribed to topic: forest/sensors");
+            await _mqttClient.SubscribeAsync("forest_fire/data");
+            Console.WriteLine("Subscribed to topic: forest_fire/data");
         }
         catch (Exception ex)
         {

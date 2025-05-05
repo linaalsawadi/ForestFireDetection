@@ -2,3 +2,9 @@
     height: 500px;
     width: 100%;
 }
+.custom-icon {
+    height: 17.5px;
+    width: 17.5px;
+    margin-right: 8px;
+    vertical-align: middle;
+}
