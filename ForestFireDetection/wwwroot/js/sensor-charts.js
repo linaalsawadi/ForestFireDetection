@@ -114,7 +114,7 @@ chartHubConnection.on("ReceiveSensorData", function (sensorId, latestPoint, stat
             state === "yellow" ? '<span class="badge bg-warning text-dark  rounded-pill">Warning</span>' :
                     '<span class="badge bg-success rounded-pill">Normal</span>';
 
-        positioningDataCell.textContent = new Date(positioningData).toLocaleString();
+        positioningDataCell.textContent = positioningData.ToString();
 
         dangerCell.textContent = danger ? "Yes" : "No";
     }
@@ -169,11 +169,11 @@ function refreshDashboard() {
                 row.innerHTML = `
                     <td>${sensor.sensorId}</td>
                     <td>
-                        ${sensor.sensorState === "red" ? '<span class="badge bg-danger">Critical</span>' :
-                        sensor.sensorState === "yellow" ? '<span class="badge bg-warning text-dark">Warning</span>' :
+                        ${sensor.sensorState === "red" ? '<span class="badge bg-danger rounded-pill">Critical</span>' :
+                    sensor.sensorState === "yellow" ? '<span class="badge bg-warning text-dark rounded-pill">Warning</span>' :
                             '<span class="badge bg-success rounded-pill">Normal</span>'}
                     </td>
-                    <td>${new Date(sensor.sensorPositioningDate).toISOString().split('T')[0]}</td>
+                    <td>${new Date(sensor.sensorPositioningDate).toLocaleString()}</td>
                     <td>${sensor.sensorDangerSituation ? "Yes" : "No"}</td>
                 `;
 
