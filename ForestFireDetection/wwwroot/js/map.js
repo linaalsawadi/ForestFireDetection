@@ -27,7 +27,13 @@ window.onload = function () {
 
     const mapHubConnection = new signalR.HubConnectionBuilder()
         .withUrl("/mapHub")
+        .withAutomaticReconnect()
+        .configureLogging(signalR.LogLevel.Information)
         .build();
+
+    mapHubConnection.serverTimeoutInMilliseconds = 10 * 60 * 1000;
+    mapHubConnection.keepAliveIntervalInMilliseconds = 30 * 1000;
+
 
     mapHubConnection.on("UpdateSensor", function (data) {
         updateSensorOnMap(data, map);

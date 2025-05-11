@@ -22,6 +22,10 @@
                             <span class="status-label text-muted me-1">Critical</span>
                             <span id="count-red" class="status-badge bg-danger">@Model.Count(s => s.SensorState == "red")</span>
                         </div>
+                        <div class="d-flex align-items-center">
+                            <span class="status-label text-muted me-1">Offline</span>
+                            <span id="count-offline" class="status-badge bg-secondary ">@Model.Count(s => s.SensorState == "offline")</span>
+                        </div>
                     </div>
 
                     <div class="form-group" style="max-width: 250px;">
@@ -58,9 +62,13 @@
                                     {
                                         <span class="badge bg-warning text-dark rounded-pill">Warning</span>
                                     }
-                                    else
+                                    else if (sensor.SensorState == "green")
                                     {
                                         <span class="badge bg-success rounded-pill">Normal</span>
+                                    } 
+                                    else
+                                    {
+                                        <span class="badge bg-secondary rounded-pill">Offline</span>
                                     }
                                 </td>
                                 <td>@sensor.SensorPositioningDate.ToString()</td>

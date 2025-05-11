@@ -72,9 +72,43 @@ function renderLineChart(canvasId, label, data, color) {
 
 const chartHubConnection = new signalR.HubConnectionBuilder()
     .withUrl("/chartHub")
+    .withAutomaticReconnect()
+    .configureLogging(signalR.LogLevel.Information)
     .build();
 
-chartHubConnection.on("ReceiveSensorData", function (sensorId, latestPoint, state, danger, totalGreen, totalYellow, totalRed, positioningData) {
+
+chartHubConnection.serverTimeoutInMilliseconds = 10 * 60 * 1000;
+chartHubConnection.keepAliveIntervalInMilliseconds = 30 * 1000;
+
+
+chartHubConnection.on("ReceiveSensorData", function (sensorId, latestPoint, state, danger, totalGreen, totalYellow, totalRed, totalOffline, positioningData) {
+
+    // ✅ تحديث العدادات
+    document.getElementById("count-green").textContent = totalGreen;
+    document.getElementById("count-yellow").textContent = totalYellow;
+    document.getElementById("count-red").textContent = totalRed;
+    document.getElementById("count-offline").textContent = totalOffline;
+
+
+    const row = Array.from(document.querySelectorAll("#sensorTable tbody tr"))
+        .find(tr => tr.children[0]?.textContent?.trim() === sensorId);
+
+    if (row) {
+        const statusCell = row.children[1];
+        const positioningDataCell = row.children[2]; 
+        const dangerCell = row.children[3];
+
+        statusCell.innerHTML =
+            state === "offline" ? '<span class="badge bg-secondary rounded-pill">Offline</span>' :
+            state === "red" ? '<span class="badge bg-danger rounded-pill">Critical</span>' :
+            state === "yellow" ? '<span class="badge bg-warning text-dark  rounded-pill">Warning</span>' :
+                        '<span class="badge bg-success rounded-pill">Normal</span>';
+
+        positioningDataCell.textContent = new Date(positioningData).toLocaleString();
+
+        dangerCell.textContent = danger ? "Yes" : "No";
+    }
+
     if (!expandedSensorIds.has(sensorId)) return;
 
     const chartTypes = ["temp", "humidity", "smoke"];
@@ -101,33 +135,11 @@ chartHubConnection.on("ReceiveSensorData", function (sensorId, latestPoint, stat
         }
     });
 
-    const row = Array.from(document.querySelectorAll("#sensorTable tbody tr"))
-        .find(tr => tr.children[0]?.textContent?.trim() === sensorId);
-
-    if (row) {
-        const statusCell = row.children[1];
-        const positioningDataCell = row.children[2]; 
-        const dangerCell = row.children[3];
-
-        statusCell.innerHTML =
-            state === "red" ? '<span class="badge bg-danger rounded-pill">Critical</span>' :
-            state === "yellow" ? '<span class="badge bg-warning text-dark  rounded-pill">Warning</span>' :
-                    '<span class="badge bg-success rounded-pill">Normal</span>';
-
-        positioningDataCell.textContent = positioningData.ToString();
-
-        dangerCell.textContent = danger ? "Yes" : "No";
-    }
-
-    // ✅ تحديث العدادات
-    document.getElementById("count-green").textContent = totalGreen;
-    document.getElementById("count-yellow").textContent = totalYellow;
-    document.getElementById("count-red").textContent = totalRed;
 });
 
 chartHubConnection.start()
-    .then(() => console.log("✅ Connected to chartHub"))
-    .catch(err => console.error("❌ chartHub connection failed:", err));
+    .then(() => console.log("Connected to chartHub"))
+    .catch(err => console.error("chartHub connection failed:", err));
 
 function attachExpandableEvents() {
     document.querySelectorAll('tr[data-widget="expandable-table"]').forEach(row => {
@@ -169,7 +181,9 @@ function refreshDashboard() {
                 row.innerHTML = `
                     <td>${sensor.sensorId}</td>
                     <td>
-                        ${sensor.sensorState === "red" ? '<span class="badge bg-danger rounded-pill">Critical</span>' :
+                        ${
+                    sensor.sensorState === "offline" ? '<span class="badge bg-secondary rounded-pill">Offline</span>' :
+                    sensor.sensorState === "red" ? '<span class="badge bg-danger rounded-pill">Critical</span>' :
                     sensor.sensorState === "yellow" ? '<span class="badge bg-warning text-dark rounded-pill">Warning</span>' :
                             '<span class="badge bg-success rounded-pill">Normal</span>'}
                     </td>
