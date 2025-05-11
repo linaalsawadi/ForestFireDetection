@@ -83,6 +83,7 @@ namespace ForestFireDetection.Services
             var greenCount = await _context.Sensors.CountAsync(s => s.SensorState == "green");
             var yellowCount = await _context.Sensors.CountAsync(s => s.SensorState == "yellow");
             var redCount = await _context.Sensors.CountAsync(s => s.SensorState == "red");
+            var offlineCount =await _context.Sensors.CountAsync(s => s.SensorState == "offline");
 
             await _chartHub.Clients.All.SendAsync("ReceiveSensorData", data.SensorId, new
             {
@@ -90,7 +91,7 @@ namespace ForestFireDetection.Services
                 temperature = data.Temperature,
                 humidity = data.Humidity,
                 smoke = data.Smoke
-            }, state, sensor.SensorDangerSituation, greenCount, yellowCount, redCount, sensor.SensorPositioningDate);
+            }, state, sensor.SensorDangerSituation, greenCount, yellowCount, redCount, offlineCount, sensor.SensorPositioningDate);
 
 
             // ✅ تجميع البيانات
