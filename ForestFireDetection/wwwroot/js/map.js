@@ -1,4 +1,5 @@
-﻿window.onload = function () {
+﻿// ✅ سكريبت الخريطة المحدث مع تحديث القيم فقط دون إعادة فتح اللوحة
+window.onload = function () {
     const mapContainer = document.getElementById('map');
     if (!mapContainer) return;
 
@@ -64,14 +65,17 @@
             map.setView([parseFloat(latitude), parseFloat(longitude)], 15);
             showSensorPanel(sensorId);
         }
+
+        // ✅ تحديث القيم على الخط البياني فقط دون إعادة فتح اللوحة
+        if (window.currentOpenSensorId === sensorId) {
+            updateSensorPanelCharts(sensorId, data);
+        }
     };
 };
 
-// ✅ إظهار اللوحة الجانبية
 function showSensorPanel(sensorId) {
+    window.currentOpenSensorId = sensorId;
     document.getElementById("sensor-title").innerText = `Sensor: ${sensorId}`;
-
-    // ✅ فتح الـ Control Sidebar الرسمي
     document.querySelector('[data-widget="control-sidebar"]').click();
 
     fetch(`/Sensors/GetSensorData?sensorId=${sensorId}`)
@@ -80,7 +84,7 @@ function showSensorPanel(sensorId) {
             drawSensorPanelCharts(sensorId, data);
         });
 }
-// ✅ رسم الرسوم داخل اللوحة
+
 function drawSensorPanelCharts(sensorId, data) {
     document.getElementById("sensor-panel-body").innerHTML = `
         <div class="mb-4">
@@ -113,4 +117,28 @@ function drawSensorPanelCharts(sensorId, data) {
     })), "rgba(255, 206, 86, 1)");
 }
 
+function updateSensorPanelCharts(sensorId, latestData) {
+    const charts = [
+        { id: `tempChart-${sensorId}`, value: latestData.temperature },
+        { id: `humidityChart-${sensorId}`, value: latestData.humidity },
+        { id: `smokeChart-${sensorId}`, value: latestData.smoke }
+    ];
 
+    charts.forEach(({ id, value }) => {
+        const canvas = document.getElementById(id);
+        if (canvas) {
+            const chart = Chart.getChart(id);
+            if (chart) {
+                const time = new Date(latestData.timestamp).toLocaleTimeString();
+                chart.data.labels.push(time);
+                chart.data.datasets[0].data.push(value);
+
+                if (chart.data.labels.length > 10) {
+                    chart.data.labels.shift();
+                    chart.data.datasets[0].data.shift();
+                }
+                chart.update();
+            }
+        }
+    });
+}

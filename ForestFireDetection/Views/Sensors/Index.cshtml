@@ -1,86 +1,89 @@
 ﻿@model List<ForestFireDetection.Models.Sensor>
 
 <div class="row">
-    <div class="card mt-3">
-        <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-microchip"></i> Sensors List</h3>
-        </div>
-        <div class="card-body">
-
-            <div class="d-flex justify-content-between align-items-center">
-                <div class="d-flex align-items-center gap-3 flex-wrap">
-                    <div class="d-flex align-items-center">
-                        <span class="status-label text-muted me-1">Normal</span>
-                        <span id="count-green" class="status-badge bg-success">@Model.Count(s => s.SensorState == "green")</span>
-                    </div>
-                    <div class="d-flex align-items-center">
-                        <span class="status-label text-muted me-1">Warning</span>
-                        <span id="count-yellow" class="status-badge bg-warning text-dark">@Model.Count(s => s.SensorState == "yellow")</span>
-                    </div>
-                    <div class="d-flex align-items-center">
-                        <span class="status-label text-muted me-1">Critical</span>
-                        <span id="count-red" class="status-badge bg-danger">@Model.Count(s => s.SensorState == "red")</span>
-                    </div>
-                </div>
-
-                <div class="form-group" style="max-width: 250px;">
-                    <div class="input-group">
-                        <span class="input-group-text bg-white border-end-0">
-                            <i class="fas fa-search text-muted"></i>
-                        </span>
-                        <input type="text" class="form-control border-start-0" id="sensorSearch"
-                               placeholder="Search" aria-label="Search">
-                    </div>
-                </div>
+    <div class="col-md-12 mt-3" >
+        <div class="card card-success card-outline">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-microchip"></i> Sensors List</h3>
             </div>
+            <div class="card-body">
 
-            <table class="table table-bordered table-hover" id="sensorTable">
-                <thead>
-                    <tr>
-                        <th><i class="fas fa-barcode"></i> Sensor ID</th>
-                        <th><i class="fas fa-thermometer-half"></i> Status</th>
-                        <th><i class="fas fa-calendar-alt"></i> Positioning Date</th>
-                        <th><i class="fas fa-exclamation-triangle"></i> Danger</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var sensor in Model)
-                    {
-                        <tr data-widget="expandable-table" aria-expanded="false">
-                            <td>@sensor.SensorId</td>
-                            <td>
-                                @if (sensor.SensorState == "red")
-                                {
-                                    <span class="badge bg-danger rounded-pill">Critical</span>
-                                }
-                                else if (sensor.SensorState == "yellow")
-                                {
-                                    <span class="badge bg-warning text-dark rounded-pill">Warning</span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-success rounded-pill">Normal</span>
-                                }
-                            </td>
-                            <td>@sensor.SensorPositioningDate.ToString("yyyy-MM-dd")</td>
-                            <td>@(sensor.SensorDangerSituation ? "Yes" : "No")</td>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-3 flex-wrap">
+                        <div class="d-flex align-items-center">
+                            <span class="status-label text-muted me-1">Normal</span>
+                            <span id="count-green" class="status-badge bg-success">@Model.Count(s => s.SensorState == "green")</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <span class="status-label text-muted me-1">Warning</span>
+                            <span id="count-yellow" class="status-badge bg-warning text-dark">@Model.Count(s => s.SensorState == "yellow")</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <span class="status-label text-muted me-1">Critical</span>
+                            <span id="count-red" class="status-badge bg-danger">@Model.Count(s => s.SensorState == "red")</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="max-width: 250px;">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0">
+                                <i class="fas fa-search text-muted"></i>
+                            </span>
+                            <input type="text" class="form-control border-start-0" id="sensorSearch"
+                                   placeholder="Search" aria-label="Search">
+                        </div>
+                    </div>
+                </div>
+
+                <table class="table table-bordered table-hover" id="sensorTable">
+                    <thead>
+                        <tr>
+                            <td><i class="fas fa-barcode"></i> Sensor ID</td>
+                            <td><i class="fas fa-thermometer-half"></i> Status</td>
+                            <td><i class="fas fa-calendar-alt"></i> Positioning Date</td>
+                            <td><i class="fas fa-exclamation-triangle"></i> Danger</td>
                         </tr>
-                        <tr class="expandable-body d-none">
-                            <td colspan="4">
-                                <div id="charts-container-@sensor.SensorId" class="p-2 bg-light rounded shadow-sm">
-                                    <div class="text-center py-3">
-                                        <div class="spinner-border text-primary" role="status">
-                                            <span class="visually-hidden">Loading...</span>
+                    </thead>
+                    <tbody>
+                        @foreach (var sensor in Model)
+                        {
+                            <tr data-widget="expandable-table" aria-expanded="false">
+                                <td>@sensor.SensorId</td>
+                                <td>
+                                    @if (sensor.SensorState == "red")
+                                    {
+                                        <span class="badge bg-danger rounded-pill">Critical</span>
+                                    }
+                                    else if (sensor.SensorState == "yellow")
+                                    {
+                                        <span class="badge bg-warning text-dark rounded-pill">Warning</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success rounded-pill">Normal</span>
+                                    }
+                                </td>
+                                <td>@sensor.SensorPositioningDate.ToString()</td>
+                                <td>@(sensor.SensorDangerSituation ? "Yes" : "No")</td>
+                            </tr>
+                            <tr class="expandable-body d-none">
+                                <td colspan="4">
+                                    <div id="charts-container-@sensor.SensorId" class="p-2 bg-light rounded shadow-sm">
+                                        <div class="text-center py-3">
+                                            <div class="spinner-border text-primary" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                            <p class="text-muted mt-2">Loading sensor data...</p>
                                         </div>
-                                        <p class="text-muted mt-2">Loading sensor data...</p>
                                     </div>
-                                </div>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
         </div>
+        
     </div>
 </div>
 

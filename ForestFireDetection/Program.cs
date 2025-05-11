@@ -5,6 +5,7 @@ using ForestFireDetection.Models;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.SignalR;
 using ForestFireDetection.Hubs;
+using ForestFireDetection.Services;
 
 public class Program
 {
@@ -33,6 +34,7 @@ public class Program
         builder.Services.AddMemoryCache();
         builder.Services.AddSession();
         builder.Services.AddScoped<MqttService>();
+        builder.Services.AddScoped<SensorDataProcessor>();
         builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                .AddCookie();
 

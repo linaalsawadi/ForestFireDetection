@@ -6,33 +6,34 @@
 }
 
 <div class="row ">
-	<div class="card mt-3">
+	<div class="col-md-12 mt-3">
+		<div class="card card-success card-outline">
+			<div class="card-header">
+				<h3 class="card-title"><i class="fas fa-fire-extinguisher"></i> Edit Fire Station</h3>
+			</div>
+			<div class="card-body">
 
-		<div class="card-header">
-			<h3 class="card-title"><i class="fas fa-fire-extinguisher"></i> Edit Fire Station</h3>
-		</div>
-		<div class="card-body">
+				<form asp-controller="Users" asp-action="Edit" method="post">
+					<input asp-for="Id" type="hidden" />
+					<div class="mb-3">
+						<label asp-for="FirstName" class="form-label"></label>
+						<input asp-for="FirstName" class="form-control" />
+					</div>
+					<div class="mb-3">
+						<label asp-for="LastName" class="form-label"></label>
+						<input asp-for="LastName" class="form-control" />
+					</div>
+					<div class="mb-3">
+						<label asp-for="Email" class="form-label"></label>
+						<input asp-for="Email" class="form-control" />
+					</div>
 
-			<form asp-controller="Users" asp-action="Edit" method="post">
-				<input asp-for="Id" type="hidden" />
-				<div class="mb-3">
-					<label asp-for="FirstName" class="form-label"></label>
-					<input asp-for="FirstName" class="form-control" />
-				</div>
-				<div class="mb-3">
-					<label asp-for="LastName" class="form-label"></label>
-					<input asp-for="LastName" class="form-control" />
-				</div>
-				<div class="mb-3">
-					<label asp-for="Email" class="form-label"></label>
-					<input asp-for="Email" class="form-control" />
-				</div>
-
-				<button type="submit" class="btn btn-black btn-outline-success" style="width:150px">Update</button>
-				<a asp-controller="Users" asp-action="ListFireStations" class="btn btn-secondary" style="width:150px">
-					Back to list
-				</a>
-			</form>
+					<button type="submit" class="btn btn-black btn-outline-success" style="width:150px">Update</button>
+					<a asp-controller="Users" asp-action="ListFireStations" class="btn btn-secondary" style="width:150px">
+						Back to list
+					</a>
+				</form>
+			</div>
 		</div>
 	</div>
 </div>

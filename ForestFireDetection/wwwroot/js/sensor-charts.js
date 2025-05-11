@@ -61,7 +61,10 @@ function renderLineChart(canvasId, label, data, color) {
                 legend: { display: true, position: 'top' }
             },
             scales: {
-                y: { beginAtZero: true }
+                y: {
+                    beginAtZero: true,
+                    suggestedMax: Math.max(...data.map(d => d.value)) + 20 
+                }
             }
         }
     });
@@ -71,7 +74,7 @@ const chartHubConnection = new signalR.HubConnectionBuilder()
     .withUrl("/chartHub")
     .build();
 
-chartHubConnection.on("ReceiveSensorData", function (sensorId, latestPoint, state, danger, totalGreen, totalYellow, totalRed) {
+chartHubConnection.on("ReceiveSensorData", function (sensorId, latestPoint, state, danger, totalGreen, totalYellow, totalRed, positioningData) {
     if (!expandedSensorIds.has(sensorId)) return;
 
     const chartTypes = ["temp", "humidity", "smoke"];
@@ -103,12 +106,15 @@ chartHubConnection.on("ReceiveSensorData", function (sensorId, latestPoint, stat
 
     if (row) {
         const statusCell = row.children[1];
+        const positioningDataCell = row.children[2]; 
         const dangerCell = row.children[3];
 
         statusCell.innerHTML =
             state === "red" ? '<span class="badge bg-danger rounded-pill">Critical</span>' :
             state === "yellow" ? '<span class="badge bg-warning text-dark  rounded-pill">Warning</span>' :
                     '<span class="badge bg-success rounded-pill">Normal</span>';
+
+        positioningDataCell.textContent = positioningData.ToString();
 
         dangerCell.textContent = danger ? "Yes" : "No";
     }
@@ -163,11 +169,11 @@ function refreshDashboard() {
                 row.innerHTML = `
                     <td>${sensor.sensorId}</td>
                     <td>
-                        ${sensor.sensorState === "red" ? '<span class="badge bg-danger">Critical</span>' :
-                        sensor.sensorState === "yellow" ? '<span class="badge bg-warning text-dark">Warning</span>' :
+                        ${sensor.sensorState === "red" ? '<span class="badge bg-danger rounded-pill">Critical</span>' :
+                    sensor.sensorState === "yellow" ? '<span class="badge bg-warning text-dark rounded-pill">Warning</span>' :
                             '<span class="badge bg-success rounded-pill">Normal</span>'}
                     </td>
-                    <td>${new Date(sensor.sensorPositioningDate).toISOString().split('T')[0]}</td>
+                    <td>${new Date(sensor.sensorPositioningDate).toLocaleString()}</td>
                     <td>${sensor.sensorDangerSituation ? "Yes" : "No"}</td>
                 `;
 
