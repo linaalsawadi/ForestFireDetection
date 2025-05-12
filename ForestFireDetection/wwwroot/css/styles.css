@@ -8,3 +8,7 @@
     margin-right: 8px;
     vertical-align: middle;
 }
+#alert-count-badge {
+    font-size: 0.65rem;
+    padding: 4px 7px;
+}

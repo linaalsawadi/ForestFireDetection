@@ -36,6 +36,7 @@ public class Program
         builder.Services.AddScoped<MqttService>();
         builder.Services.AddScoped<SensorDataProcessor>();
         builder.Services.AddHostedService<SensorMonitorService>();
+        builder.Services.AddHostedService<SignalRKeepAliveService>();
         builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                .AddCookie();
 

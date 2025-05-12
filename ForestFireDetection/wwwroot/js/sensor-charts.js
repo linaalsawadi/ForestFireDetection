@@ -221,3 +221,7 @@ function refreshDashboard() {
             attachExpandableEvents();
         });
 }
+
+chartHubConnection.on("KeepAlive", (timestamp) => {
+    console.log("KeepAlive from server:", timestamp);
+});

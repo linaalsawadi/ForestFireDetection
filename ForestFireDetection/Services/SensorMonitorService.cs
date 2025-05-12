@@ -58,8 +58,8 @@ namespace ForestFireDetection.Services
                                 sensor.SensorState = "offline";
                                 sensor.SensorDangerSituation = false;
                                 state = "offline";
+                                Updated = true;
                             }
-                            Updated = true;
                         }
                         else if (sensor.SensorState == "offline")
                         {
