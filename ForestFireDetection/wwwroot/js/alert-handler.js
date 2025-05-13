@@ -24,6 +24,14 @@ alertConnection.on("NewAlert", function (alert) {
     }
 });
 
+alertConnection.on("UpdateAlertCount", function (count) {
+    const badge = document.getElementById("alert-count-badge");
+    if (badge) {
+        badge.textContent = count;
+        badge.style.display = count > 0 ? "inline-block" : "none";
+    }
+});
+
 alertConnection.start()
     .then(() => console.log("✅ Connected to alertHub"))
     .catch(err => console.error("❌ alertHub connection failed:", err));
@@ -58,7 +66,6 @@ function renderAlerts() {
                 <span><b>Smoke:</b> ${alert.smoke}</span>
                 <span><b>Humidity:</b> ${alert.humidity}</span>
                 <span><b>Fire Score:</b> ${Math.round(alert.fireScore ?? 0)}</span>
-                <span><b>Duration:</b> ${alert.duration ?? "-"}</span>
                 <span><b>Location:</b> (${alert.latitude}, ${alert.longitude})</span>
             </div>
             <div class="alert-actions">
@@ -110,9 +117,18 @@ function clearAlert(alertId) {
 }
 
 function acknowledge(alertId) {
-    console.log("Acknowledged alert:", alertId);
-    alert("Alert acknowledged.");
-    clearAlert(alertId);
+    fetch(`/Alerts/Acknowledge/${alertId}`, { method: "POST" })
+        .then(res => {
+            if (res.ok) {
+                clearAlert(alertId);
+                showStackedToast("✅ Fire alert acknowledged successfully!");
+            } else {
+                showStackedToast("❌ Failed to acknowledge alert.", "fa-times-circle", "bg-danger");
+            }
+        })
+        .catch(err => {
+            showStackedToast("Error acknowledging alert.", "fa-exclamation-circle", "bg-danger");
+        });
 }
 
 function zoomToSensorFromAlert(latitude, longitude, sensorId, alert) {
@@ -120,6 +136,38 @@ function zoomToSensorFromAlert(latitude, longitude, sensorId, alert) {
     sessionStorage.setItem("zoomTarget", JSON.stringify({ latitude, longitude, sensorId }));
     window.location.href = `/Map/Index`;
 }
+
+function showStackedToast(message, iconClass = "fa-check-circle", bg = "bg-success") {
+    const toastArea = document.getElementById("toastArea");
+
+    const toastId = `toast-${Date.now()}`;
+    const toastHTML = `
+        <div id="${toastId}" class="toast text-white ${bg}" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="3000">
+            <div class="toast-header">
+                <i class="fas ${iconClass} me-2 text-${bg.includes("danger") ? "danger" : "success"}"></i>
+                <strong class="me-auto">Green Shield</strong>
+                <small class="text-muted">just now</small>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body">
+                ${message}
+            </div>
+        </div>
+    `;
+
+    toastArea.insertAdjacentHTML("beforeend", toastHTML);
+
+    const toastEl = document.getElementById(toastId);
+    const toast = new bootstrap.Toast(toastEl, {
+        delay: 3000,
+        autohide: true
+    });
+    toast.show();
+
+    // حذف التوست من DOM بعد اختفائه
+    toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
+}
+
 
 // ✅ إعادة عرض التنبيه المخزن عند التنقل بين الصفحات
 const alertJson = sessionStorage.getItem("pendingAlert");
@@ -134,3 +182,7 @@ if (alertJson) {
         console.warn("Failed to parse stored alert:", e);
     }
 }
+
+alertConnection.on("KeepAlive", (timestamp) => {
+    console.log("KeepAlive from server:", timestamp);
+});

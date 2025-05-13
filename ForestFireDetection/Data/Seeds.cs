@@ -38,7 +38,7 @@ namespace ForestFireDetection.Data
                     {
                         UserName = adminUserEmail,
                         FirstName = "admin",
-                        LastName = "",
+                        LastName = "admin",
                         Email = adminUserEmail,
                         EmailConfirmed = true,
 

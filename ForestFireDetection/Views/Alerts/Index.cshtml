@@ -1,0 +1,160 @@
+﻿@model IEnumerable<ForestFireDetection.Models.Alert>
+@{
+    ViewData["Title"] = "Alerts List";
+}
+
+<div class="row">
+    <div class="col-md-12 mt-3">
+        <div class="card card-success card-outline">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-fire-alt"></i> Alerts List</h3>
+            </div>
+
+            <div class="card-body">
+                <div class="row">
+                    <div class="form-group ms-auto" style="max-width: 250px;">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0">
+                                <i class="fas fa-search text-muted"></i>
+                            </span>
+                            <input type="text" class="form-control border-start-0" id="alertSearch" placeholder="Search">
+                        </div>
+                    </div>
+                </div>
+
+                <table class="table table-bordered table-hover" id="alertTable">
+                    <thead>
+                        <tr>
+                            <td><i class="fas fa-microchip"></i> Sensor ID</td>
+                            <td><i class="fas fa-thermometer-half"></i> Temp (°C)</td>
+                            <td><i class="fas fa-smog"></i> Smoke</td>
+                            <td><i class="fas fa-tint"></i> Humidity</td>
+                            <td><i class="fas fa-clock"></i> Alert Time</td>
+                            <td><i class="fas fa-flag"></i> Status</td>
+                            <td><i class="fas fa-tools"></i> Actions</td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var alert in Model)
+                        {
+                            <tr data-widget="expandable-table" aria-expanded="false">
+                                <td>@alert.SensorId</td>
+                                <td>@alert.Temperature</td>
+                                <td>@alert.Smoke</td>
+                                <td>@alert.Humidity</td>
+                                <td>@alert.Timestamp.ToLocalTime().ToString("g")</td>
+                                <td>
+                                    <span class="badge
+                                        @(alert.Status == "NotReviewed" ? "bg-warning text-dark" :
+                                          alert.Status == "InReview" ? "bg-info" : "bg-success")">
+                                        @alert.Status
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="btn-group">
+                                        @if (alert.Status == "NotReviewed")
+                                        {
+                                            <button class="btn btn-outline-dark btn-sm" onclick="acknowledgeAlert('@alert.Id')">
+                                                <i class="fas fa-check-circle"></i> Accept
+                                            </button>
+                                        }
+                                        else if (alert.Status == "InReview" && alert.ReviewedBy == User.Identity.Name)
+                                        {
+                                            <button class="btn btn-outline-success btn-sm" onclick="showResolveModal('@alert.Id')">
+                                                <i class="fas fa-flag-checkered"></i> Resolve
+                                            </button>
+                                        }
+                                        else if (alert.Status == "InReview")
+                                        {
+                                            <span class="text-muted small">Being reviewed by @alert.ReviewedBy</span>
+                                        }
+                                        else if (alert.Status == "Resolved")
+                                        {
+                                            <span class="text-success small"><i class="fas fa-check-double"></i> Done</span>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr class="expandable-body d-none">
+                                <td colspan="7">
+                                    <div class="p-3 bg-light rounded shadow-sm">
+                                        <h6 class="mb-2"><i class="fas fa-info-circle text-success"></i> Resolution Details</h6>
+                                        <p class="mb-1"><strong><i class="fas fa-user-check"></i> Reviewed By:</strong> @alert.ReviewedBy</p>
+                                        <p class="mb-1"><strong><i class="fas fa-clock"></i> Reviewed At:</strong> @alert.ReviewedAt?.ToLocalTime().ToString("f")</p>
+                                        <p><strong><i class="fas fa-sticky-note"></i> Note:</strong> @alert.ResolutionNote</p>
+                                    </div>
+                                </td>
+                            </tr>
+
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ✅ Modal لإغلاق التنبيه -->
+<div class="modal fade" id="resolveModal" tabindex="-1" aria-labelledby="resolveModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form id="resolveForm">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="resolveModalLabel"><i class="fas fa-edit"></i> Resolve Alert</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="resolveAlertId" name="id" />
+                    <div class="mb-3">
+                        <label for="resolutionNote" class="form-label">Resolution Note</label>
+                        <textarea class="form-control" id="resolutionNote" name="resolutionNote" required rows="3" placeholder="Describe how the issue was resolved..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-success">Submit</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById("alertSearch").addEventListener("keyup", function () {
+            const input = this.value.toLowerCase();
+            const rows = document.querySelectorAll("#alertTable tbody tr");
+
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(input) ? "" : "none";
+            });
+        });
+
+        function acknowledgeAlert(alertId) {
+            fetch(`/Alerts/Acknowledge/${alertId}`, { method: "POST" })
+                .then(res => {
+                    if (res.ok) location.reload();
+                    else alert("Failed to acknowledge alert.");
+                });
+        }
+
+        function showResolveModal(alertId) {
+            document.getElementById("resolveAlertId").value = alertId;
+            new bootstrap.Modal(document.getElementById("resolveModal")).show();
+        }
+
+        document.getElementById("resolveForm").addEventListener("submit", function (e) {
+            e.preventDefault();
+            const id = document.getElementById("resolveAlertId").value;
+            const note = document.getElementById("resolutionNote").value;
+
+            fetch(`/Alerts/Resolve?id=${id}&resolutionNote=${encodeURIComponent(note)}`, {
+                method: "POST"
+            }).then(res => {
+                if (res.ok) location.reload();
+                else alert("Failed to resolve alert.");
+            });
+        });
+    </script>
+}

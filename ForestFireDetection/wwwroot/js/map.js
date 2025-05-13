@@ -148,3 +148,7 @@ function updateSensorPanelCharts(sensorId, latestData) {
         }
     });
 }
+
+mapHubConnection.on("KeepAlive", (timestamp) => {
+    console.log("KeepAlive from server:", timestamp);
+});

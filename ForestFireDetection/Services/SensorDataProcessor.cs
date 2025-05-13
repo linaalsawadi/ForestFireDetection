@@ -138,8 +138,6 @@ namespace ForestFireDetection.Services
             if (!_fireStartTimes.ContainsKey(avgData.SensorId))
                 _fireStartTimes[avgData.SensorId] = DateTime.UtcNow;
 
-            TimeSpan fireDuration = DateTime.UtcNow - _fireStartTimes[avgData.SensorId];
-
             var alert = new Alert
             {
                 Id = Guid.NewGuid(),
@@ -152,11 +150,13 @@ namespace ForestFireDetection.Services
                 Longitude = avgData.Longitude,
                 Status = "NotReviewed",
                 FireScore = fireScore,
-                Duration = fireDuration
             };
 
             _context.Alerts.Add(alert);
             await _context.SaveChangesAsync();
+
+            var notReviewedCount = await _context.Alerts.CountAsync(a => a.Status == "NotReviewed");
+            await _alertHub.Clients.All.SendAsync("UpdateAlertCount", notReviewedCount);
 
             await _alertHub.Clients.All.SendAsync("NewAlert", new
             {
@@ -170,7 +170,6 @@ namespace ForestFireDetection.Services
                 alert.Longitude,
                 Status = alert.Status,
                 FireScore = Math.Round(alert.FireScore, 2),
-                Duration = $"{(int)fireDuration.TotalMinutes} min",
             });
 
         }

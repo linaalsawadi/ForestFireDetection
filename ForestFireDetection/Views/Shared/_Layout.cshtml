@@ -1,4 +1,8 @@
 @using ForestFireDetection.Data
+@inject ForestFireDetection.Data.ForestFireDetectionDbContext _context
+@{
+    var pendingCount = _context.Alerts.Count(a => a.Status == "NotReviewed");
+}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -115,8 +119,19 @@
                             <li class="nav-item">
                                 <a asp-controller="Sensors" asp-action="Index" class="nav-link"><i class="nav-icon fas fa-microchip"></i><p>Sensors</p></a>
                             </li>
-                                
                         }
+                        <li class="nav-item">
+                            <a asp-controller="Alerts" asp-action="Index" class="nav-link">
+                                <i class="nav-icon fas fa-fire-alt"></i>
+                                <p>
+                                    Alerts
+                                    <span id="alert-count-badge" class="badge bg-danger position-absolute top-0 start-0 translate-middle rounded-pill"
+                                                                                  style="display:@(pendingCount > 0 ? "inline-block" : "none")">
+                                        @pendingCount
+                                    </span>
+                                </p>
+                            </a>
+                        </li>
                         <li class="nav-item">
                             <a asp-controller="Map" asp-action="Index" class="nav-link"><i class="nav-icon fas fa-map"></i><p>Map</p></a>
                         </li>
@@ -154,6 +169,8 @@
     <script src="~/plugins/jquery/jquery.min.js"></script>
     <script src="~/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script src="~/dist/js/adminlte.min.js"></script>
+    <script src="~/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
 
     <!-- SignalR (Microsoft CDN) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
@@ -162,6 +179,8 @@
     <script src="~/js/alert-handler.js"></script>
     @await RenderSectionAsync("Scripts", required: false)
 
+    <!-- ? ??????? ???????? ???????? -->
+    <div class="toast-container position-fixed top-0 end-0 p-3" id="toastArea" style="z-index: 1060;"></div>
     <!-- ????? ????? ???????? ?????? ???????? -->
     <audio id="fire-sound" src="/audio/alert.mp3" preload="auto"></audio>
     <div id="alert-overlay"></div>
