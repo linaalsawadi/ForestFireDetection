@@ -25,7 +25,7 @@ namespace ForestFireDetection.Controllers
 
         [HttpGet]
         [Authorize(Roles = UserRoles.Admin)]
-        public async Task<IActionResult> GetSensorData(Guid sensorId)
+        public async Task<IActionResult> GetSensorData(string sensorId)
         {
             var data = await _context.SensorData
                 .Where(d => d.SensorId == sensorId)

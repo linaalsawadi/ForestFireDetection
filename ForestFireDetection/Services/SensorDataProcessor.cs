@@ -13,9 +13,9 @@ namespace ForestFireDetection.Services
         private readonly IHubContext<MapHub> _mapHub;
         private readonly IHubContext<ChartHub> _chartHub;
 
-        private static readonly Dictionary<Guid, List<SensorData>> _buffer = new();
-        private static readonly Dictionary<Guid, DateTime> _lastAlertTimes = new();
-        private static readonly Dictionary<Guid, DateTime> _fireStartTimes = new();
+        private static readonly Dictionary<string, List<SensorData>> _buffer = new();
+        private static readonly Dictionary<string, DateTime> _lastAlertTimes = new();
+        private static readonly Dictionary<string, DateTime> _fireStartTimes = new();
 
         private const int BATCH_SIZE = 4;
         private const int ALERT_REPEAT_MINUTES = 5;

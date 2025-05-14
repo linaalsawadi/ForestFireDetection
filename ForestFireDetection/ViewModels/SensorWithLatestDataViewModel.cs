@@ -2,7 +2,7 @@
 {
     public class SensorWithLatestDataViewModel
     {
-        public Guid SensorId { get; set; }
+        public string SensorId { get; set; }
         public string SensorState { get; set; }
         public DateTime SensorPositioningDate { get; set; }
         public bool SensorDangerSituation { get; set; }
