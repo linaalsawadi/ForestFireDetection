@@ -22,7 +22,7 @@ namespace ForestFireDetection.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("Alert", b =>
+            modelBuilder.Entity("ForestFireDetection.Models.Alert", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -41,23 +41,28 @@ namespace ForestFireDetection.Migrations
                         .HasColumnType("float");
 
                     b.Property<string>("ResolutionNote")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<DateTime?>("ReviewedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("ReviewedBy")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
-                    b.Property<Guid>("SensorId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("SensorId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)")
+                        .HasAnnotation("Relational:JsonPropertyName", "sensorId");
 
                     b.Property<float>("Smoke")
                         .HasColumnType("real");
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<float>("Temperature")
                         .HasColumnType("real");
@@ -66,6 +71,8 @@ namespace ForestFireDetection.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("SensorId");
 
                     b.ToTable("Alerts");
                 });
@@ -145,9 +152,8 @@ namespace ForestFireDetection.Migrations
 
             modelBuilder.Entity("ForestFireDetection.Models.Sensor", b =>
                 {
-                    b.Property<Guid>("SensorId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("SensorId")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<bool>("SensorDangerSituation")
                         .HasColumnType("bit");
@@ -182,8 +188,9 @@ namespace ForestFireDetection.Migrations
                         .HasColumnType("float")
                         .HasAnnotation("Relational:JsonPropertyName", "longitude");
 
-                    b.Property<Guid>("SensorId")
-                        .HasColumnType("uniqueidentifier")
+                    b.Property<string>("SensorId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)")
                         .HasAnnotation("Relational:JsonPropertyName", "sensorId");
 
                     b.Property<float>("Smoke")
@@ -337,6 +344,17 @@ namespace ForestFireDetection.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("ForestFireDetection.Models.Alert", b =>
+                {
+                    b.HasOne("ForestFireDetection.Models.Sensor", "Sensor")
+                        .WithMany("Alerts")
+                        .HasForeignKey("SensorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Sensor");
+                });
+
             modelBuilder.Entity("ForestFireDetection.Models.SensorData", b =>
                 {
                     b.HasOne("ForestFireDetection.Models.Sensor", "Sensor")
@@ -401,6 +419,8 @@ namespace ForestFireDetection.Migrations
 
             modelBuilder.Entity("ForestFireDetection.Models.Sensor", b =>
                 {
+                    b.Navigation("Alerts");
+
                     b.Navigation("DataHistory");
                 });
 #pragma warning restore 612, 618

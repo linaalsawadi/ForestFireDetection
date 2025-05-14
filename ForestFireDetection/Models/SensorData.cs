@@ -11,7 +11,7 @@ namespace ForestFireDetection.Models
 
         [ForeignKey("Sensor")]
         [JsonPropertyName("sensorId")]
-        public Guid SensorId { get; set; }
+        public string SensorId { get; set; }
 
         [JsonPropertyName("latitude")]
         public double Latitude { get; set; }

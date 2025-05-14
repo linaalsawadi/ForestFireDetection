@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection.Emit;
 
 namespace ForestFireDetection.Data;
 
@@ -25,5 +26,12 @@ public class ForestFireDetectionDbContext : IdentityDbContext<ApplicationUser>
         .WithOne(d => d.Sensor)
         .HasForeignKey(d => d.SensorId)
         .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<Alert>()
+                .HasOne(a => a.Sensor)
+                .WithMany(s => s.Alerts)
+                .HasForeignKey(a => a.SensorId)
+                .OnDelete(DeleteBehavior.Cascade);
     }
+
 }

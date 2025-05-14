@@ -6,31 +6,11 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace ForestFireDetection.Migrations
 {
     /// <inheritdoc />
-    public partial class AddReviewedByToAlert : Migration
+    public partial class AddAlertSensorRelationFixed : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.CreateTable(
-                name: "Alerts",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    SensorId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Temperature = table.Column<float>(type: "real", nullable: false),
-                    Smoke = table.Column<float>(type: "real", nullable: false),
-                    Humidity = table.Column<float>(type: "real", nullable: false),
-                    Timestamp = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    ReviewedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Latitude = table.Column<double>(type: "float", nullable: false),
-                    Longitude = table.Column<double>(type: "float", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Alerts", x => x.Id);
-                });
-
             migrationBuilder.CreateTable(
                 name: "AspNetRoles",
                 columns: table => new
@@ -73,29 +53,11 @@ namespace ForestFireDetection.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "SensorData",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    SensorId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Latitude = table.Column<double>(type: "float", nullable: false),
-                    Longitude = table.Column<double>(type: "float", nullable: false),
-                    Temperature = table.Column<float>(type: "real", nullable: false),
-                    Humidity = table.Column<float>(type: "real", nullable: false),
-                    Smoke = table.Column<float>(type: "real", nullable: false),
-                    Timestamp = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_SensorData", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Sensors",
                 columns: table => new
                 {
-                    SensorId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    SensorState = table.Column<string>(type: "nvarchar(6)", maxLength: 6, nullable: false),
+                    SensorId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    SensorState = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     SensorPositioningDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     SensorDangerSituation = table.Column<bool>(type: "bit", nullable: false)
                 },
@@ -210,6 +172,64 @@ namespace ForestFireDetection.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "Alerts",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    SensorId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Temperature = table.Column<float>(type: "real", nullable: false),
+                    Smoke = table.Column<float>(type: "real", nullable: false),
+                    Humidity = table.Column<float>(type: "real", nullable: false),
+                    FireScore = table.Column<double>(type: "float", nullable: false),
+                    Timestamp = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    ReviewedBy = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    ReviewedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    ResolutionNote = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    Latitude = table.Column<double>(type: "float", nullable: false),
+                    Longitude = table.Column<double>(type: "float", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Alerts", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Alerts_Sensors_SensorId",
+                        column: x => x.SensorId,
+                        principalTable: "Sensors",
+                        principalColumn: "SensorId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "SensorData",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    SensorId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Latitude = table.Column<double>(type: "float", nullable: false),
+                    Longitude = table.Column<double>(type: "float", nullable: false),
+                    Temperature = table.Column<float>(type: "real", nullable: false),
+                    Humidity = table.Column<float>(type: "real", nullable: false),
+                    Smoke = table.Column<float>(type: "real", nullable: false),
+                    Timestamp = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SensorData", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_SensorData_Sensors_SensorId",
+                        column: x => x.SensorId,
+                        principalTable: "Sensors",
+                        principalColumn: "SensorId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Alerts_SensorId",
+                table: "Alerts",
+                column: "SensorId");
+
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
                 table: "AspNetRoleClaims",
@@ -248,6 +268,11 @@ namespace ForestFireDetection.Migrations
                 column: "NormalizedUserName",
                 unique: true,
                 filter: "[NormalizedUserName] IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SensorData_SensorId",
+                table: "SensorData",
+                column: "SensorId");
         }
 
         /// <inheritdoc />
@@ -275,13 +300,13 @@ namespace ForestFireDetection.Migrations
                 name: "SensorData");
 
             migrationBuilder.DropTable(
-                name: "Sensors");
-
-            migrationBuilder.DropTable(
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");
+
+            migrationBuilder.DropTable(
+                name: "Sensors");
         }
     }
 }
