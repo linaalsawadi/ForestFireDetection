@@ -13,6 +13,7 @@ namespace ForestFireDetection.Services
     {
         private readonly IServiceScopeFactory _scopeFactory;
         private IMqttClient _mqttClient;
+        private const string Topic = "forest_fire/data/#";
 
         public MqttService(IServiceScopeFactory scopeFactory)
         {
@@ -37,44 +38,51 @@ namespace ForestFireDetection.Services
                     using var scope = _scopeFactory.CreateScope();
                     var processor = scope.ServiceProvider.GetRequiredService<SensorDataProcessor>();
 
-                    // ✅ تم التعديل: تحويل الحمولة إلى نص Base64
                     string base64Payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
+                    Console.WriteLine($"📦 MQTT Base64: {base64Payload}");
 
-                    // ✅ تم التعديل: فك تشفير AES واستخراج JSON
-                    var (jsonDecrypted, rawText) = AESHelper.DecryptBase64(base64Payload);
+                    string? decryptedRaw = AESHelper.DecryptToRawText(base64Payload);
 
-                    //var payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
-                    //var data = JsonSerializer.Deserialize<SensorData>(payload);
-
-                    Console.WriteLine($"\n📦 Base64: {base64Payload}"); // ✅ عرض الـ Base64
-                    Console.WriteLine($"🔓 RAW: {rawText}");             // ✅ عرض النص المفكوك
-
-                    // ✅ التحقق من نجاح فك التشفير
-                    if (jsonDecrypted == null)
+                    if (string.IsNullOrWhiteSpace(decryptedRaw))
                     {
-                        Console.WriteLine("❌ Failed to decrypt or extract JSON.");
+                        Console.WriteLine("❌ Failed to decrypt message.");
                         return;
                     }
 
-                    // ✅ تم التعديل: تحويل JSON إلى كائن SensorData
-                    var data = JsonSerializer.Deserialize<SensorData>(jsonDecrypted);
-                    if (data == null)
+                    // قص كل ما قبل الجملة "temp"
+                    int jsonStart = decryptedRaw.IndexOf("\"temp\"");
+                    int jsonEnd = decryptedRaw.LastIndexOf('}');
+
+                    if (jsonStart >= 0 && jsonEnd > jsonStart)
                     {
-                        Console.WriteLine("⚠️ JSON deserialization failed.");
-                        return;
+                        // نضيف { من البداية التي تم قطعها
+                        string jsonBlock = "{" + decryptedRaw.Substring(jsonStart, jsonEnd - jsonStart + 1);
+                        Console.WriteLine($"🟨 Cleaned JSON Block: {jsonBlock}");
+
+                        try
+                        {
+                            var data = JsonSerializer.Deserialize<SensorData>(jsonBlock);
+                            if (data == null || data.SensorId == Guid.Empty)
+                            {
+                                Console.WriteLine("⚠️ JSON deserialization failed or SensorId missing.");
+                                return;
+                            }
+
+                            data.Id = Guid.NewGuid();
+                            data.Timestamp = DateTime.UtcNow;
+
+                            await processor.ProcessAsync(data);
+                            Console.WriteLine($"✅ Decrypted JSON: Temp={data.Temperature}, Hum={data.Humidity}, Smo={data.Smoke}");
+                        }
+                        catch (Exception)
+                        {
+                            Console.WriteLine("⚠️ JSON decode error.");
+                        }
                     }
-
-
-                    //if (data == null) return;
-
-                    data.Id = Guid.NewGuid();
-                    data.Timestamp = DateTime.UtcNow;
-
-                    await processor.ProcessAsync(data);
-
-                    // ✅ تم الإضافة: تأكيد البيانات المعالجة
-                    Console.WriteLine($"✅ SensorData: Temp={data.Temperature}, Hum={data.Humidity}, Smo={data.Smoke}");
-
+                    else
+                    {
+                        Console.WriteLine("❌ No valid JSON block found.");
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -87,18 +95,13 @@ namespace ForestFireDetection.Services
             try
             {
                 await _mqttClient.ConnectAsync(options);
-                Console.WriteLine("Connected to HiveMQ broker.");
-
-                //await _mqttClient.SubscribeAsync("forest_fire/sensor");
-                //Console.WriteLine("Subscribed to topic: forest_fire/sensor");
-
-                // ✅ تم التعديل: topic الصحيح
-                await _mqttClient.SubscribeAsync("forest_fire/data/#");
-                Console.WriteLine("Subscribed to topic: forest_fire/data/#");
+                Console.WriteLine("✅ Connected to HiveMQ broker.");
+                await _mqttClient.SubscribeAsync(Topic);
+                Console.WriteLine($"📡 Subscribed to topic: {Topic}");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"MQTT Connection Error: {ex.Message}");
+                Console.WriteLine($"❌ MQTT Connection Error: {ex.Message}");
             }
         }
     }
