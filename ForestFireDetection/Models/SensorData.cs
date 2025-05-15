@@ -10,7 +10,7 @@ namespace ForestFireDetection.Models
         public Guid Id { get; set; }
 
         [ForeignKey("Sensor")]
-        [JsonPropertyName("sensorId")]
+        [JsonPropertyName("Id")]
         public Guid SensorId { get; set; }
 
         [JsonPropertyName("latitude")]
@@ -19,13 +19,13 @@ namespace ForestFireDetection.Models
         [JsonPropertyName("longitude")]
         public double Longitude { get; set; }
 
-        [JsonPropertyName("temperature")]
+        [JsonPropertyName("tmp")]
         public float Temperature { get; set; }
 
-        [JsonPropertyName("humidity")]
+        [JsonPropertyName("hmd")]
         public float Humidity { get; set; }
 
-        [JsonPropertyName("smoke")]
+        [JsonPropertyName("smk")]
         public float Smoke { get; set; }
         public DateTime Timestamp { get; set; }
 

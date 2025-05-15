@@ -80,7 +80,7 @@
                                     <div class="p-3 bg-light rounded shadow-sm">
                                         <h6 class="mb-2"><i class="fas fa-info-circle text-success"></i> Resolution Details</h6>
                                         <p class="mb-1"><strong><i class="fas fa-user-check"></i> Reviewed By:</strong> @alert.ReviewedBy</p>
-                                        <p class="mb-1"><strong><i class="fas fa-clock"></i> Reviewed At:</strong> @alert.ReviewedAt?.ToLocalTime().ToString("f")</p>
+                                        <p class="mb-1"><strong><i class="fas fa-clock"></i> Reviewed At:</strong> @alert.ReviewedAt.ToLocalTime().ToString("f")</p>
                                         <p><strong><i class="fas fa-sticky-note"></i> Note:</strong> @alert.ResolutionNote</p>
                                     </div>
                                 </td>
