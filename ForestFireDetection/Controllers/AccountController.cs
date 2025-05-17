@@ -1,6 +1,5 @@
 ﻿using ForestFireDetection.Data;
 using ForestFireDetection.Models;
-using ForestFireDetection.Data;
 using ForestFireDetection.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
