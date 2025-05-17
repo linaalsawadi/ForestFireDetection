@@ -1,4 +1,5 @@
-﻿using MQTTnet;
+﻿using ForestFireDetection.Helpers;
+using MQTTnet;
 using MQTTnet.Client;
 using System.Text;
 using System.Text.Json;
@@ -12,6 +13,7 @@ namespace ForestFireDetection.Services
     {
         private readonly IServiceScopeFactory _scopeFactory;
         private IMqttClient _mqttClient;
+        private const string Topic = "forest_fire/data/#";
 
         public MqttService(IServiceScopeFactory scopeFactory)
         {
@@ -36,15 +38,51 @@ namespace ForestFireDetection.Services
                     using var scope = _scopeFactory.CreateScope();
                     var processor = scope.ServiceProvider.GetRequiredService<SensorDataProcessor>();
 
-                    var payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
-                    var data = JsonSerializer.Deserialize<SensorData>(payload);
+                    string base64Payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
+                    Console.WriteLine($"📦 MQTT Base64: {base64Payload}");
 
-                    if (data == null) return;
+                    string? decryptedRaw = AESHelper.DecryptToRawText(base64Payload);
 
-                    data.Id = Guid.NewGuid();
-                    data.Timestamp = DateTime.UtcNow;
+                    if (string.IsNullOrWhiteSpace(decryptedRaw))
+                    {
+                        Console.WriteLine("❌ Failed to decrypt message.");
+                        return;
+                    }
 
-                    await processor.ProcessAsync(data);
+                    // قص كل ما قبل الجملة "temp"
+                    int jsonStart = decryptedRaw.IndexOf("\"temp\"");
+                    int jsonEnd = decryptedRaw.LastIndexOf('}');
+
+                    if (jsonStart >= 0 && jsonEnd > jsonStart)
+                    {
+                        // نضيف { من البداية التي تم قطعها
+                        string jsonBlock = "{" + decryptedRaw.Substring(jsonStart, jsonEnd - jsonStart + 1);
+                        Console.WriteLine($"🟨 Cleaned JSON Block: {jsonBlock}");
+
+                        try
+                        {
+                            var data = JsonSerializer.Deserialize<SensorData>(jsonBlock);
+                            if (data == null || data.SensorId == String.Empty)
+                            {
+                                Console.WriteLine("⚠️ JSON deserialization failed or SensorId missing.");
+                                return;
+                            }
+
+                            data.Id = Guid.NewGuid();
+                            data.Timestamp = DateTime.UtcNow;
+
+                            await processor.ProcessAsync(data);
+                            Console.WriteLine($"✅ Decrypted JSON: Temp={data.Temperature}, Hum={data.Humidity}, Smo={data.Smoke}");
+                        }
+                        catch (Exception)
+                        {
+                            Console.WriteLine("⚠️ JSON decode error.");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("❌ No valid JSON block found.");
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -57,14 +95,13 @@ namespace ForestFireDetection.Services
             try
             {
                 await _mqttClient.ConnectAsync(options);
-                Console.WriteLine("Connected to HiveMQ broker.");
-
-                await _mqttClient.SubscribeAsync("forest_fire/sensor");
-                Console.WriteLine("Subscribed to topic: forest_fire/sensor");
+                Console.WriteLine("✅ Connected to HiveMQ broker.");
+                await _mqttClient.SubscribeAsync(Topic);
+                Console.WriteLine($"📡 Subscribed to topic: {Topic}");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"MQTT Connection Error: {ex.Message}");
+                Console.WriteLine($"❌ MQTT Connection Error: {ex.Message}");
             }
         }
     }
