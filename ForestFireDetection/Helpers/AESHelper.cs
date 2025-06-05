@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
 using System.Collections.Generic;
@@ -28,9 +29,14 @@ namespace ForestFireDetection.Helpers
 
                 using Aes aes = Aes.Create();
                 aes.Key = Key;
-                aes.IV = IV;
+
+                // ⛔ لا تستخدم IV الثابت مباشرة — انسخه إلى نسخة جديدة
+                byte[] ivCopy = new byte[16];
+                Array.Copy(IV, ivCopy, 16);
+                aes.IV = ivCopy;
+
                 aes.Mode = CipherMode.CBC;
-                aes.Padding = PaddingMode.None;
+                aes.Padding = PaddingMode.PKCS7;
 
                 using var decryptor = aes.CreateDecryptor();
                 using var ms = new MemoryStream(cipherBytes);
@@ -45,13 +51,22 @@ namespace ForestFireDetection.Helpers
                 }
 
                 byte[] decrypted = decryptedList.ToArray();
+                string result = Encoding.UTF8.GetString(decrypted).Trim('\0', '\r', '\n', '\t', '\u0001', '\u001F');
 
-                // لا نحاول إزالة البادينغ، بل نسمح بفك UTF-8 حتى مع padding عشوائي
-                return Encoding.UTF8.GetString(decrypted).Trim('\0', '\n', '\r', '\t');
+                int jsonStart = result.IndexOf('{');
+                int jsonEnd = result.LastIndexOf('}');
+
+                if (jsonStart >= 0 && jsonEnd > jsonStart)
+                {
+                    string cleanJson = result.Substring(jsonStart, jsonEnd - jsonStart + 1);
+                    return cleanJson;
+                }
+
+                return null;
             }
             catch (Exception ex)
             {
-                Console.WriteLine("❌ AES Decryption Error (safe fallback): " + ex.Message);
+                Console.WriteLine("❌ AES Decryption Error: " + ex.Message);
                 return null;
             }
         }

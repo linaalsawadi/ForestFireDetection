@@ -1,0 +1,34 @@
+﻿@{
+    ViewData["Title"] = "Monthly Sensor Report";
+}
+
+<h2>📆 Monthly Sensor Report</h2>
+
+<div class="form-group">
+    <label>Select Sensor:</label>
+    <select id="sensorId" class="form-control w-25"></select>
+</div>
+
+<div id="monthBar" class="mb-3"></div>
+
+<div id="calendarDays" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px;"></div>
+
+<style>
+    .day-box {
+        padding: 10px;
+        text-align: center;
+        background-color: #f8f9fa;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+        .day-box:hover {
+            background-color: #e9ecef;
+        }
+</style>
+
+@section Scripts {
+    <script src="~/js/sensor-reports.js"></script>
+}

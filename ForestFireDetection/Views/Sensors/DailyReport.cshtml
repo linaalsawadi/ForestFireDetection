@@ -1,0 +1,77 @@
+﻿@{
+    ViewData["Title"] = "Daily Sensor Report";
+    var sensorId = Context.Request.Query["sensorId"];
+    var date = Context.Request.Query["date"];
+}
+
+<h2>📅 Daily Report for @sensorId - @date</h2>
+
+<canvas id="dailyChart" height="100"></canvas>
+
+<table class="table table-bordered mt-4">
+    <thead>
+        <tr>
+            <th>Hour</th>
+            <th>Temperature</th>
+            <th>Humidity</th>
+            <th>Smoke</th>
+            <th>FireScore</th>
+        </tr>
+    </thead>
+    <tbody id="detailTableBody"></tbody>
+</table>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const sensorId = '@sensorId';
+        const date = '@date';
+
+        async function loadDailyChart() {
+            const res = await fetch(`/Sensors/GetDailyDetail?sensorId=${sensorId}&date=${date}`);
+            const data = await res.json();
+
+            const labels = data.map(d => `${d.hour}:00`);
+            const temp = data.map(d => d.temperature);
+            const hum = data.map(d => d.humidity);
+            const smoke = data.map(d => d.smoke);
+            const fire = data.map(d => d.fireScore);
+
+            const ctx = document.getElementById('dailyChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'Temperature', data: temp, borderWidth: 2 },
+                        { label: 'Humidity', data: hum, borderWidth: 2 },
+                        { label: 'Smoke', data: smoke, borderWidth: 2 },
+                        { label: 'FireScore', data: fire, borderWidth: 2 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+
+            // Fill table
+            const table = document.getElementById('detailTableBody');
+            data.forEach(d => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                            <td>${d.hour}:00</td>
+                            <td>${d.temperature.toFixed(1)}</td>
+                            <td>${d.humidity.toFixed(1)}</td>
+                            <td>${d.smoke.toFixed(1)}</td>
+                            <td>${d.fireScore.toFixed(2)}</td>
+                        `;
+                table.appendChild(row);
+            });
+        }
+
+        window.onload = loadDailyChart;
+    </script>
+}

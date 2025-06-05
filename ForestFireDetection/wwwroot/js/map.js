@@ -1,9 +1,12 @@
 ﻿// ✅ سكريبت الخريطة المحدث مع تحديث القيم فقط دون إعادة فتح اللوحة
+
+const charts = {};
 window.onload = function () {
     const mapContainer = document.getElementById('map');
     if (!mapContainer) return;
 
     var map = L.map('map').setView([40.7423, 30.3338], 15);
+    window.map = map;
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors'
@@ -31,9 +34,9 @@ window.onload = function () {
         .configureLogging(signalR.LogLevel.Information)
         .build();
 
+    window.mapHubConnection = mapHubConnection;
     mapHubConnection.serverTimeoutInMilliseconds = 10 * 60 * 1000;
     mapHubConnection.keepAliveIntervalInMilliseconds = 30 * 1000;
-
 
     mapHubConnection.on("UpdateSensor", function (data) {
         updateSensorOnMap(data, map);
@@ -72,7 +75,6 @@ window.onload = function () {
             showSensorPanel(sensorId);
         }
 
-        // ✅ تحديث القيم على الخط البياني فقط دون إعادة فتح اللوحة
         if (window.currentOpenSensorId === sensorId) {
             updateSensorPanelCharts(sensorId, data);
         }
@@ -81,8 +83,14 @@ window.onload = function () {
 
 function showSensorPanel(sensorId) {
     window.currentOpenSensorId = sensorId;
-    document.getElementById("sensor-title").innerText = `Sensor: ${sensorId}`;
-    document.querySelector('[data-widget="control-sidebar"]').click();
+    const title = document.getElementById("sensor-title");
+    if (title) {
+        title.innerText = `Sensor: ${sensorId}`;
+    }
+    const controlSidebar = document.querySelector('[data-widget="control-sidebar"]');
+    if (controlSidebar) {
+        controlSidebar.click();
+    }
 
     fetch(`/Sensors/GetSensorData?sensorId=${sensorId}`)
         .then(res => res.json())
@@ -92,7 +100,9 @@ function showSensorPanel(sensorId) {
 }
 
 function drawSensorPanelCharts(sensorId, data) {
-    document.getElementById("sensor-panel-body").innerHTML = `
+    const panelBody = document.getElementById("sensor-panel-body");
+    if (!panelBody) return;
+    panelBody.innerHTML = `
         <div class="mb-4">
             <h6><i class="fas fa-thermometer-half text-danger"></i> Temperature (°C)</h6>
             <canvas id="tempChart-${sensorId}" height="200"></canvas>
@@ -107,17 +117,17 @@ function drawSensorPanelCharts(sensorId, data) {
         </div>
     `;
 
-    renderLineChart(`tempChart-${sensorId}`, "Temperature (°C)", data.map(d => ({
+    renderChart(`tempChart-${sensorId}`, "Temperature (°C)", data.map(d => ({
         timestamp: d.timestamp,
         value: d.temperature
     })), "rgba(255, 99, 132, 1)");
 
-    renderLineChart(`humidityChart-${sensorId}`, "Humidity (%)", data.map(d => ({
+    renderChart(`humidityChart-${sensorId}`, "Humidity (%)", data.map(d => ({
         timestamp: d.timestamp,
         value: d.humidity
     })), "rgba(54, 162, 235, 1)");
 
-    renderLineChart(`smokeChart-${sensorId}`, "Smoke", data.map(d => ({
+    renderChart(`smokeChart-${sensorId}`, "Smoke", data.map(d => ({
         timestamp: d.timestamp,
         value: d.smoke
     })), "rgba(255, 206, 86, 1)");
@@ -149,6 +159,45 @@ function updateSensorPanelCharts(sensorId, latestData) {
     });
 }
 
-mapHubConnection.on("KeepAlive", (timestamp) => {
-    console.log("KeepAlive from server:", timestamp);
-});
+if (typeof mapHubConnection !== 'undefined') {
+    mapHubConnection.on("KeepAlive", (timestamp) => {
+        console.log("KeepAlive from server:", timestamp);
+    });
+}
+
+function renderChart(canvasId, label, data, color) {
+    const ctx = document.getElementById(canvasId)?.getContext('2d');
+    if (!ctx) return;
+
+    if (charts[canvasId] && typeof charts[canvasId].destroy === "function") {
+        charts[canvasId].destroy();
+    }
+
+    charts[canvasId] = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: data.map(d => new Date(d.timestamp).toLocaleTimeString()),
+            datasets: [{
+                label: label,
+                data: data.map(d => d.value),
+                borderColor: color,
+                backgroundColor: color.replace("1)", "0.1)"),
+                fill: true,
+                tension: 0.3,
+                pointRadius: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: true, position: 'top' }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    suggestedMax: Math.max(...data.map(d => d.value)) + 20
+                }
+            }
+        }
+    });
+}

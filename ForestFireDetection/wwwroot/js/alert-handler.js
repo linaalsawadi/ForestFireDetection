@@ -62,11 +62,13 @@ function renderAlerts() {
         popup.innerHTML = `
             <div class="alert-text">
                 <h4><i class="fas fa-fire-alt text-danger"></i> Fire detected</h4>
+                <span><b>Sensor ID:</b> ${alert.sensorId}</span>
+                <span><b>Fire Score:</b> <span class="text-danger fw-bold">${Math.round(alert.fireScore ?? 0)}%</span></span>
                 <span><b>Temp:</b> ${alert.temperature}°C</span>
                 <span><b>Smoke:</b> ${alert.smoke}</span>
                 <span><b>Humidity:</b> ${alert.humidity}</span>
-                <span><b>Fire Score:</b> ${Math.round(alert.fireScore ?? 0)}</span>
                 <span><b>Location:</b> (${alert.latitude}, ${alert.longitude})</span>
+
             </div>
             <div class="alert-actions">
                 <button onclick="clearAlert('${alert.id}')" class="btn btn-secondary me-2">Clear</button>

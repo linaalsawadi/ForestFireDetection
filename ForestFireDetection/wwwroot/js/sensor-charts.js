@@ -76,27 +76,24 @@ const chartHubConnection = new signalR.HubConnectionBuilder()
     .configureLogging(signalR.LogLevel.Information)
     .build();
 
-
 chartHubConnection.serverTimeoutInMilliseconds = 10 * 60 * 1000;
 chartHubConnection.keepAliveIntervalInMilliseconds = 30 * 1000;
 
-
 chartHubConnection.on("ReceiveSensorData", function (sensorId, latestPoint, state, danger, totalGreen, totalYellow, totalRed, totalOffline, positioningData) {
-
     // ✅ تحديث العدادات
     document.getElementById("count-green").textContent = totalGreen;
     document.getElementById("count-yellow").textContent = totalYellow;
     document.getElementById("count-red").textContent = totalRed;
     document.getElementById("count-offline").textContent = totalOffline;
 
-
     const row = Array.from(document.querySelectorAll("#sensorTable tbody tr"))
         .find(tr => tr.children[0]?.textContent?.trim() === sensorId);
 
     if (row) {
         const statusCell = row.children[1];
-        const positioningDataCell = row.children[2]; 
-        const dangerCell = row.children[3];
+        const fireScoreCell = row.children[2];
+        const positioningDataCell = row.children[3];
+        const dangerCell = row.children[4];
 
         statusCell.innerHTML =
             state === "offline" ? '<span class="badge bg-secondary rounded-pill">Offline</span>' :
@@ -104,8 +101,17 @@ chartHubConnection.on("ReceiveSensorData", function (sensorId, latestPoint, stat
             state === "yellow" ? '<span class="badge bg-warning text-dark  rounded-pill">Warning</span>' :
                         '<span class="badge bg-success rounded-pill">Normal</span>';
 
-        positioningDataCell.textContent = new Date(positioningData).toLocaleString();
+        const score = latestPoint.fireScore;
+        if (score !== null && score !== undefined) {
+            const rounded = score.toFixed(2);
+            if (score >= 35) fireScoreCell.innerHTML = `<span class="fw-bold text-danger">${rounded}</span>`;
+            else if (score >= 25) fireScoreCell.innerHTML = `<span class="fw-bold text-warning">${rounded}</span>`;
+            else fireScoreCell.innerHTML = `<span class="fw-bold text-success">${rounded}</span>`;
+        } else {
+            fireScoreCell.innerHTML = '<span class="text-muted">N/A</span>';
+        }
 
+        positioningDataCell.textContent = new Date(positioningData).toLocaleString();
         dangerCell.textContent = danger ? "Yes" : "No";
     }
 
@@ -134,7 +140,6 @@ chartHubConnection.on("ReceiveSensorData", function (sensorId, latestPoint, stat
             chart.update();
         }
     });
-
 });
 
 chartHubConnection.start()
@@ -174,6 +179,16 @@ function refreshDashboard() {
 
             sensors.forEach(sensor => {
                 const isOpen = expandedSensorIds.has(sensor.sensorId);
+                const fireScore = sensor.fireScore;
+                let fireScoreHtml = '<span class="text-muted">N/A</span>';
+
+                if (fireScore !== null && fireScore !== undefined) {
+                    const scoreValue = fireScore.toFixed(2);
+                    if (fireScore >= 35) fireScoreHtml = `<span class="fw-bold text-danger">${scoreValue}</span>`;
+                    else if (fireScore >= 25) fireScoreHtml = `<span class="fw-bold text-warning">${scoreValue}</span>`;
+                    else fireScoreHtml = `<span class="fw-bold text-success">${scoreValue}</span>`;
+                }
+
                 const row = document.createElement("tr");
                 row.setAttribute("data-widget", "expandable-table");
                 row.setAttribute("aria-expanded", isOpen ? "true" : "false");
@@ -181,12 +196,12 @@ function refreshDashboard() {
                 row.innerHTML = `
                     <td>${sensor.sensorId}</td>
                     <td>
-                        ${
-                    sensor.sensorState === "offline" ? '<span class="badge bg-secondary rounded-pill">Offline</span>' :
-                    sensor.sensorState === "red" ? '<span class="badge bg-danger rounded-pill">Critical</span>' :
-                    sensor.sensorState === "yellow" ? '<span class="badge bg-warning text-dark rounded-pill">Warning</span>' :
+                        ${sensor.sensorState === "offline" ? '<span class="badge bg-secondary rounded-pill">Offline</span>' :
+                        sensor.sensorState === "red" ? '<span class="badge bg-danger rounded-pill">Critical</span>' :
+                        sensor.sensorState === "yellow" ? '<span class="badge bg-warning text-dark rounded-pill">Warning</span>' :
                             '<span class="badge bg-success rounded-pill">Normal</span>'}
                     </td>
+                    <td>${fireScoreHtml}</td>
                     <td>${new Date(sensor.sensorPositioningDate).toLocaleString()}</td>
                     <td>${sensor.sensorDangerSituation ? "Yes" : "No"}</td>
                 `;
@@ -194,7 +209,7 @@ function refreshDashboard() {
                 const expandable = document.createElement("tr");
                 expandable.className = isOpen ? "expandable-body" : "expandable-body d-none";
                 expandable.innerHTML = `
-                    <td colspan="4">
+                    <td colspan="5">
                         <div id="charts-container-${sensor.sensorId}" class="p-2 bg-light rounded shadow-sm">
                             <div class="text-center py-3">
                                 <div class="spinner-border text-primary" role="status">
