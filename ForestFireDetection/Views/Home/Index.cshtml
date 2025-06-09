@@ -1,22 +1,141 @@
-﻿@using Microsoft.AspNetCore.Identity;
-@inject SignInManager<ApplicationUser> SignInManager
-@inject UserManager<ApplicationUser> UserManager
-@{
-    ViewData["Title"] = "Home Page";
+﻿@{
+    ViewData["Title"] = "Dashboard";
+    Layout = "_Layout";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-    <p>User Id : @ViewData["UserID"]</p>
+<section class="content">
+    <div class="container-fluid">
 
-</div>
+        <!-- ✅ Info Cards -->
+        <div class="row mt-3">
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-danger">
+                    <div class="inner">
+                        <h3>@ViewBag.ActiveAlerts</h3>
+                        <p>Active Alerts</p>
+                    </div>
+                    <div class="icon"><i class="fas fa-fire-alt"></i></div>
+                    <a href="/Alerts" class="small-box-footer">View <i class="fas fa-arrow-circle-right"></i></a>
+                </div>
+            </div>
 
-@if (User.IsInRole("Admin"))
-{
-    <h1>Hi Admin</h1>
-}
-else
-{
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-success">
+                    <div class="inner">
+                        <h3>@ViewBag.OnlineSensors</h3>
+                        <p>Online Sensors</p>
+                    </div>
+                    <div class="icon"><i class="fas fa-wifi"></i></div>
+                    <a href="/Sensors" class="small-box-footer">View <i class="fas fa-arrow-circle-right"></i></a>
+                </div>
+            </div>
 
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-secondary">
+                    <div class="inner">
+                        <h3>@ViewBag.OfflineSensors</h3>
+                        <p>Offline Sensors</p>
+                    </div>
+                    <div class="icon"><i class="fas fa-plug"></i></div>
+                    <a href="/Sensors" class="small-box-footer">View <i class="fas fa-arrow-circle-right"></i></a>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-warning">
+                    <div class="inner">
+                        <h3>@ViewBag.MaxFireScore</h3>
+                        <p>Max FireScore</p>
+                    </div>
+                    <div class="icon"><i class="fas fa-burn"></i></div>
+                    <a href="/Alerts" class="small-box-footer">View <i class="fas fa-arrow-circle-right"></i></a>
+                </div>
+            </div>
+        </div>
+
+        <!-- ✅ Chart and Recent Alerts -->
+        <div class="row">
+            <!-- Chart Column -->
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Alerts in the Last 24 Hours</h3>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="alertsChart" height="130"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Alerts Column -->
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Recent Alerts</h3>
+                    </div>
+                    <div class="card-body p-0">
+                        <ul class="list-group list-group-flush">
+                            @foreach (var alert in ViewBag.RecentAlerts)
+                            {
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <i class="fas fa-fire text-danger me-2"></i>
+                                        <strong>Sensor @alert.SensorId</strong> — @alert.Status
+                                        <br />
+                                        <small class="text-muted">@alert.Timestamp.ToString("g")</small>
+                                    </div>
+                                    <span class="badge bg-danger">@alert.FireScore</span>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const ctx = document.getElementById('alertsChart').getContext('2d');
+        const labels = @Html.Raw(Json.Serialize(ViewBag.ChartLabels));
+        const data = @Html.Raw(Json.Serialize(ViewBag.ChartData));
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Number of Alerts',
+                    data: data,
+                    borderWidth: 2,
+                    borderColor: 'rgba(40, 167, 69, 0.9)', // Green line
+                    backgroundColor: 'rgba(40, 167, 69, 0.2)', // Light green fill
+                    fill: true,
+                    tension: 0.3,
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: 'rgba(40, 167, 69, 1)',
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    </script>
 }

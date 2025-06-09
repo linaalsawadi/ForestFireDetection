@@ -29,30 +29,39 @@ namespace Hospital_appointment_system.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Login(LoginViewModel loginViewModel) 
+        public async Task<IActionResult> Login(LoginViewModel loginViewModel)
         {
-            if(!ModelState.IsValid ) 
+            if (!ModelState.IsValid)
             {
                 return View(loginViewModel);
             }
+
             var user = await _userManeger.FindByEmailAsync(loginViewModel.Email);
-            if (user != null) 
+            if (user != null)
             {
                 var passCheck = await _userManeger.CheckPasswordAsync(user, loginViewModel.Password);
-                if(passCheck)
+                if (passCheck)
                 {
-                    var result = await _signInManeger.PasswordSignInAsync(user, loginViewModel.Password, false, false);
-                    if (result.Succeeded) 
+                    var result = await _signInManeger.PasswordSignInAsync(
+                        user,
+                        loginViewModel.Password,
+                        loginViewModel.RememberMe,
+                        lockoutOnFailure: false);
+
+                    if (result.Succeeded)
                     {
                         return RedirectToAction("Index", "Home");
                     }
                 }
-                TempData["Error"] = "Wrong credentials.Please  Try again ";
+
+                TempData["Error"] = "Wrong credentials. Please try again.";
                 return View(loginViewModel);
             }
-            TempData["Error"] = "Wrong credentials.Please  Try again 2";
-                return View(loginViewModel);
+
+            TempData["Error"] = "Wrong credentials. Please try again.";
+            return View(loginViewModel);
         }
+
         [HttpPost]
         public async Task<IActionResult> Logout()
         {
