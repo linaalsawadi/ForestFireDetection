@@ -4,6 +4,7 @@ using ForestFireDetection.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ForestFireDetection.Migrations
 {
     [DbContext(typeof(ForestFireDetectionDbContext))]
-    partial class ForestFireDetectionDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250530192557_AddFireScoreToSensorData")]
+    partial class AddFireScoreToSensorData
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -212,85 +215,6 @@ namespace ForestFireDetection.Migrations
                     b.HasIndex("SensorId");
 
                     b.ToTable("SensorData");
-                });
-
-            modelBuilder.Entity("ForestFireDetection.Models.SensorDataArchive", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<double>("FireScore")
-                        .HasColumnType("float");
-
-                    b.Property<float>("Humidity")
-                        .HasColumnType("real");
-
-                    b.Property<double>("Latitude")
-                        .HasColumnType("float");
-
-                    b.Property<double>("Longitude")
-                        .HasColumnType("float");
-
-                    b.Property<string>("SensorId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<float>("Smoke")
-                        .HasColumnType("real");
-
-                    b.Property<float>("Temperature")
-                        .HasColumnType("real");
-
-                    b.Property<DateTime>("Timestamp")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("SensorDataArchive");
-                });
-
-            modelBuilder.Entity("ForestFireDetection.Models.SensorHourlySummary", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<double>("AvgFireScore")
-                        .HasColumnType("float");
-
-                    b.Property<double>("AvgHumidity")
-                        .HasColumnType("float");
-
-                    b.Property<double>("AvgSmoke")
-                        .HasColumnType("float");
-
-                    b.Property<double>("AvgTemperature")
-                        .HasColumnType("float");
-
-                    b.Property<DateTime>("Date")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("Hour")
-                        .HasColumnType("int");
-
-                    b.Property<double>("Latitude")
-                        .HasColumnType("float");
-
-                    b.Property<double>("Longitude")
-                        .HasColumnType("float");
-
-                    b.Property<string>("SensorId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("SensorHourlySummary");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>

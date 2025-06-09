@@ -34,13 +34,13 @@ namespace ForestFireDetection.Services
 
         public async Task ProcessAsync(SensorData data)
         {
-            // ✅ FireScore
-            double fireScore = (data.Temperature * 0.4) + (data.Smoke * 0.5) - (data.Humidity * 0.2);
+            // FireScore
+            data.FireScore = (data.Temperature * 0.3) + (data.Smoke * 0.6) - (data.Humidity * 0.1);
 
             string state;
-            if (data.Temperature > 60 || data.Smoke > 280)
+            if (data.FireScore >= 35)
                 state = "red";
-            else if (data.Temperature > 42 || data.Smoke > 250)
+            else if (data.FireScore >= 25)
                 state = "yellow";
             else
                 state = "green";
@@ -76,7 +76,6 @@ namespace ForestFireDetection.Services
                 longitude = data.Longitude,
                 timestamp = data.Timestamp,
                 sensorState = state,
-                fireScore = Math.Round(fireScore, 2)
             });
 
             // ✅ تحديث العدادات
@@ -90,7 +89,8 @@ namespace ForestFireDetection.Services
                 timestamp = data.Timestamp,
                 temperature = data.Temperature,
                 humidity = data.Humidity,
-                smoke = data.Smoke
+                smoke = data.Smoke,
+                fireScore = data.FireScore,
             }, state, sensor.SensorDangerSituation, greenCount, yellowCount, redCount, offlineCount, sensor.SensorPositioningDate);
 
 
@@ -114,7 +114,8 @@ namespace ForestFireDetection.Services
                 Longitude = data.Longitude,
                 Temperature = batch.Average(d => d.Temperature),
                 Humidity = batch.Average(d => d.Humidity),
-                Smoke = batch.Average(d => d.Smoke)
+                Smoke = batch.Average(d => d.Smoke),
+                FireScore = Math.Round(data.FireScore, 2)
             };
 
             _buffer[data.SensorId].Clear();
@@ -149,7 +150,7 @@ namespace ForestFireDetection.Services
                 Latitude = avgData.Latitude,
                 Longitude = avgData.Longitude,
                 Status = "NotReviewed",
-                FireScore = fireScore,
+                FireScore = avgData.FireScore,
             };
 
             _context.Alerts.Add(alert);
@@ -187,7 +188,7 @@ namespace ForestFireDetection.Services
             var lastTemp = lastReadings[1].Temperature;
             var tempRise = data.Temperature - lastTemp;
 
-            bool strongSmoke = data.Smoke >= 300;
+            bool strongSmoke = data.Smoke >= 15;
             bool highTemp = data.Temperature >= 50;
             bool lowHumidity = data.Humidity <= 25;
             bool fastTempRise = tempRise >= 5;

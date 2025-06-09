@@ -54,9 +54,6 @@
                 <li class="nav-item">
                     <a class="nav-link" data-widget="pushmenu" href="#"><i class="fas fa-bars"></i></a>
                 </li>
-                <li class="nav-item d-none d-sm-inline-block">
-                    <a asp-controller="Home" asp-action="Index" class="nav-link">Home</a>
-                </li>
             </ul>
 
             <ul class="navbar-nav ml-auto">
@@ -70,8 +67,10 @@
                 {
                     <li class="nav-item"><a class="nav-link">@User.Identity.Name</a></li>
                     <li class="nav-item">
-                        <form asp-controller="Account" asp-action="Logout" method="post">
-                            <button class="btn btn-outline-danger">Logout</button>
+                        <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-outline-success">
+                                <i class="bi bi-box-arrow-right"></i> Logout
+                            </button>
                         </form>
                     </li>
                 }
@@ -89,7 +88,7 @@
 
         <!-- Sidebar -->
         <aside class="main-sidebar sidebar-dark-primary elevation-4">
-            <a href="#" class="brand-link">
+            <a asp-controller="Home" asp-action="Index" class="brand-link">
                 <img src="~/assets/img/logo.png" alt="Logo" class="brand-image img-circle elevation-3" style="opacity: .8" />
                 <span class="brand-text font-weight-light">Green Shield</span>
             </a>
@@ -125,8 +124,7 @@
                                 <i class="nav-icon fas fa-fire-alt"></i>
                                 <p>
                                     Alerts
-                                    <span id="alert-count-badge" class="badge bg-danger position-absolute top-0 start-0 translate-middle rounded-pill"
-                                                                                  style="display:@(pendingCount > 0 ? "inline-block" : "none")">
+                                    <span class="right badge badge-danger" style="@(pendingCount > 0 ? "" : "display: none;")">
                                         @pendingCount
                                     </span>
                                 </p>
@@ -150,7 +148,7 @@
         </div>
 
         <footer class="main-footer">
-            <strong>&copy; 2023-2024</strong> All rights reserved. - O&A -
+            <strong>&copy; 2025</strong> Green Shield
             <div class="float-right d-none d-sm-inline-block">
                 <b>Version</b> 1.0.0
             </div>

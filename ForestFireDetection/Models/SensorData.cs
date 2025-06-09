@@ -27,6 +27,7 @@ namespace ForestFireDetection.Models
 
         [JsonPropertyName("smoke")]
         public float Smoke { get; set; }
+        public double FireScore { get; set; }
         public DateTime Timestamp { get; set; }
 
         public Sensor Sensor { get; set; }

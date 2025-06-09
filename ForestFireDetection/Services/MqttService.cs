@@ -49,39 +49,25 @@ namespace ForestFireDetection.Services
                         return;
                     }
 
-                    // قص كل ما قبل الجملة "temp"
-                    int jsonStart = decryptedRaw.IndexOf("\"temp\"");
-                    int jsonEnd = decryptedRaw.LastIndexOf('}');
 
-                    if (jsonStart >= 0 && jsonEnd > jsonStart)
+                    try
                     {
-                        // نضيف { من البداية التي تم قطعها
-                        string jsonBlock = "{" + decryptedRaw.Substring(jsonStart, jsonEnd - jsonStart + 1);
-                        Console.WriteLine($"🟨 Cleaned JSON Block: {jsonBlock}");
-
-                        try
+                        var data = JsonSerializer.Deserialize<SensorData>(decryptedRaw);
+                        if (data == null || data.SensorId == String.Empty)
                         {
-                            var data = JsonSerializer.Deserialize<SensorData>(jsonBlock);
-                            if (data == null || data.SensorId == String.Empty)
-                            {
-                                Console.WriteLine("⚠️ JSON deserialization failed or SensorId missing.");
-                                return;
-                            }
-
-                            data.Id = Guid.NewGuid();
-                            data.Timestamp = DateTime.UtcNow;
-
-                            await processor.ProcessAsync(data);
-                            Console.WriteLine($"✅ Decrypted JSON: Temp={data.Temperature}, Hum={data.Humidity}, Smo={data.Smoke}");
+                            Console.WriteLine("⚠️ JSON deserialization failed or SensorId missing.");
+                            return;
                         }
-                        catch (Exception)
-                        {
-                            Console.WriteLine("⚠️ JSON decode error.");
-                        }
+
+                        data.Id = Guid.NewGuid();
+                        data.Timestamp = DateTime.UtcNow;
+
+                        await processor.ProcessAsync(data);
+                        Console.WriteLine($"✅ Decrypted JSON: Temp={data.Temperature}, Hum={data.Humidity}, Smo={data.Smoke}");
                     }
-                    else
+                    catch (Exception)
                     {
-                        Console.WriteLine("❌ No valid JSON block found.");
+                        Console.WriteLine("⚠️ JSON decode error.");
                     }
                 }
                 catch (Exception ex)

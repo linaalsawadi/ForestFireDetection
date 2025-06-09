@@ -3,6 +3,7 @@
 @{
     ViewData["Title"] = "Map";
 }
+
 <div class="row">
     <div class="col-md-12 mt-3">
         <div class="card card-success card-outline">
@@ -10,9 +11,22 @@
                 <h3 class="card-title"><i class="fas fa-map"></i> Map</h3>
             </div>
 
+            
+
             <div class="card-body">
-                <!-- عنصر الخريطة -->
-                <div id="map"</div>
+                <!-- حقل البحث -->
+                <div class="form-group" style="max-width: 250px;">
+                    <div class="input-group">
+                        <input type="search" id="sensorSearchInput" class="form-control form-control-m" placeholder="Enter Sensor ID" aria-label="Search">
+                        <div class="input-group-append">
+                            <button id="searchSensorBtn" type="submit" class="btn btn-m btn-default">
+                                <i class="fa fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <!-- الخريطة -->
+                <div id="map" style="height: 500px;"></div>
             </div>
         </div>
     </div>
@@ -42,5 +56,22 @@
             </text>
         }
                 });
+
+        document.getElementById("searchSensorBtn").addEventListener("click", () => {
+            const input = document.getElementById("sensorSearchInput").value.trim();
+            if (!input) return;
+
+            const marker = window.sensorMarkers?.[input];
+            if (!marker) {
+                alert("Sensor not found on map.");
+                return;
+            }
+
+            const latLng = marker.getLatLng();
+            if (window.map) {
+                window.map.setView(latLng, 15);
+                showSensorPanel(input);
+            }
+        });
     </script>
 }

@@ -4,6 +4,7 @@ using ForestFireDetection.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ForestFireDetection.Migrations
 {
     [DbContext(typeof(ForestFireDetectionDbContext))]
-    partial class ForestFireDetectionDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250605211102_AddSensorDataArchiveTable")]
+    partial class AddSensorDataArchiveTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -260,9 +263,6 @@ namespace ForestFireDetection.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<double>("AvgFireScore")
-                        .HasColumnType("float");
-
                     b.Property<double>("AvgHumidity")
                         .HasColumnType("float");
 
@@ -277,12 +277,6 @@ namespace ForestFireDetection.Migrations
 
                     b.Property<int>("Hour")
                         .HasColumnType("int");
-
-                    b.Property<double>("Latitude")
-                        .HasColumnType("float");
-
-                    b.Property<double>("Longitude")
-                        .HasColumnType("float");
 
                     b.Property<string>("SensorId")
                         .IsRequired()

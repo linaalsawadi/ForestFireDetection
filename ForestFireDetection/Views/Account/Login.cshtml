@@ -4,104 +4,90 @@
     ViewData["Title"] = "Login";
     Layout = null;
 }
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Green Shield - Login</title>
 
-    <link rel="icon" type="image/png" sizes="512x512" href="~/assets/img/Logo.png" />
+    <link rel="icon" type="image/png" href="~/assets/img/Logo.png" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css" rel="stylesheet" />
+    <link rel="stylesheet" href="~/css/login.css" />
 
-    <!-- Google Font: Source Sans Pro -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
-    <!-- Font Awesome Icons -->
-    <link rel="stylesheet" href="~/plugins/fontawesome-free/css/all.min.css">
-    <!-- Theme style -->
-    <link href="~/assets/vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
-    <link href="~/assets/vendor/animate.css/animate.min.css" rel="stylesheet">
-    <link href="~/assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-    <link href="~/assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
-    <link href="~/assets/vendor/boxicons/css/boxicons.min.css" rel="stylesheet">
-    <link href="~/assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
-    <link href="~/assets/vendor/remixicon/remixicon.css" rel="stylesheet">
-    <link href="~/assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="~/dist/css/adminlte.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.min.css">
 </head>
-  <!--end::Head-->
-  <!--begin::Body-->
-  <body class="login-page bg-body-secondary">
-    <div class="login-box">
-        <div class="login-logo text-center mb-3">
-            <div class="d-flex justify-content-center align-items-center">
-                <img src="../../assets/img/Logo.png" alt="Logo" class="brand-image img-circle elevation-3 me-2" style="width: 60px; height: 60px; opacity: .8;">
-                <h2 class="m-0"><b>Green Shield</b></h2>
-            </div>
-        </div>
-      <!-- /.login-logo -->
-      <div class="card">
-        <div class="card-body login-card-body">
-          <p class="login-box-msg">Sign in to start your session</p>
-          <form asp-action="Login">
-            <div class="input-group mb-3">
-              <input asp-for="Email" class="form-control" placeholder="Email" />
-              <div class="input-group-text"><span class="bi bi-envelope"></span></div>
-            </div>
-            <div class="input-group mb-3">
-              <input asp-for="Password" class="form-control" placeholder="Password" />
-              <div class="input-group-text"><span class="bi bi-lock-fill"></span></div>
-            </div>
-            <!--begin::Row-->
-            <div class="row">
-              <div class="col-8">
-                <div class="form-check">
-                  <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault" />
-                  <label class="form-check-label" for="flexCheckDefault"> Remember Me </label>
-                </div>
-              </div>
-              <!-- /.col -->
-              <div class="col-4">
-                <div class="d-grid gap-2">
-                  <button type="submit" class="btn btn-primary">Sign In</button>
-                </div>
-              </div>
-              <!-- /.col -->
-            </div>
-            <!--end::Row-->
-          </form>
-        </div>
-      </div>
-    </div>
-    <!-- jQuery -->
-    <script src="~/plugins/jquery/jquery.min.js"></script>
-    <!-- Bootstrap 4 -->
-    <script src="~/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
-    <!-- AdminLTE App -->
-    <script src="~/dist/js/adminlte.min.js"></script>
 
-    <script src="~/js/site.js" asp-append-version="true"></script>
+<body>
+    <div class="container-fluid d-flex flex-column align-items-center justify-content-center min-vh-100">
+        <!-- Logo & Title -->
+        <div class="text-center mb-4 login-logo">
+            <img src="~/assets/img/Logo.png" alt="Green Shield" />
+            <h3 class="mt-2 fw-bold text-success">Green Shield</h3>
+        </div>
+
+        <!-- Login Card -->
+        <div class="card p-4 login-card">
+            <h5 class="text-center mb-3">Sign in to your account</h5>
+
+            @* Optional: Show error message *@
+            @if (ViewData.ModelState != null && !ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert-danger">
+                    Invalid email or password.
+                </div>
+            }
+
+            <form asp-action="Login">
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label">Username or email</label>
+                    <input asp-for="Email" class="form-control" placeholder="you@example.com" />
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Password" class="form-label">Password</label>
+                    <div class="input-group">
+                        <input asp-for="Password" class="form-control" type="password" id="passwordInput" placeholder="••••••" />
+                        <span class="input-group-text" style="cursor: pointer;">
+                            <i class="bi bi-eye-slash" id="togglePassword"></i>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="mb-3 d-flex justify-content-between align-items-center">
+                    <div>
+                        <input asp-for="RememberMe" class="form-check-input" />
+                        <label asp-for="RememberMe" class="form-check-label">Remember me</label>
+
+                    </div>
+                    <a href="#" class="text-muted small">Forgot password?</a>
+                </div>
+
+                <button type="submit" class="btn btn-success w-100">Sign In</button>
+            </form>
+        </div>
+
+        <!-- Background Tree Decoration -->
+        <img src="~/assets/img/tree-graphic.svg" class="background-tree" alt="Tree" />
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
     <script>
-      const SELECTOR_SIDEBAR_WRAPPER = '.sidebar-wrapper';
-      const Default = {
-        scrollbarTheme: 'os-theme-light',
-        scrollbarAutoHide: 'leave',
-        scrollbarClickScroll: true,
-      };
-      document.addEventListener('DOMContentLoaded', function () {
-        const sidebarWrapper = document.querySelector(SELECTOR_SIDEBAR_WRAPPER);
-        if (sidebarWrapper && typeof OverlayScrollbarsGlobal?.OverlayScrollbars !== 'undefined') {
-          OverlayScrollbarsGlobal.OverlayScrollbars(sidebarWrapper, {
-            scrollbars: {
-              theme: Default.scrollbarTheme,
-              autoHide: Default.scrollbarAutoHide,
-              clickScroll: Default.scrollbarClickScroll,
-            },
-          });
-        }
-      });
+        // Show/hide password
+        document.addEventListener("DOMContentLoaded", () => {
+            const toggle = document.getElementById('togglePassword');
+            const passwordInput = document.getElementById('passwordInput');
+
+            toggle.addEventListener('click', () => {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                toggle.classList.toggle('bi-eye');
+                toggle.classList.toggle('bi-eye-slash');
+            });
+        });
     </script>
-    <!--end::OverlayScrollbars Configure-->
-    <!--end::Script-->
-  </body>
-  <!--end::Body-->
+</body>
 </html>
