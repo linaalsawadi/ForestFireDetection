@@ -3,8 +3,9 @@ using Microsoft.EntityFrameworkCore;
 using ForestFireDetection.Data;
 using ForestFireDetection.Models;
 using Microsoft.AspNetCore.Authorization;
-using ForestFireDetection.ViewModels;
+using System.Linq;
 using ForestFireDetection.Models.ViewModels;
+using ForestFireDetection.ViewModels;
 using ForestFireDetection.Models.DTOs;
 
 namespace ForestFireDetection.Controllers
@@ -46,13 +47,46 @@ namespace ForestFireDetection.Controllers
         [Authorize(Roles = UserRoles.Admin)]
         public async Task<IActionResult> Reports()
         {
-            return View();
+            var sensors = await _context.Sensors.ToListAsync();
+            return View(sensors);
         }
 
         [Authorize(Roles = UserRoles.Admin)]
-        public async Task<IActionResult> DailyReport()
+        public async Task<IActionResult> DailyReport(string sensorId, DateTime date)
         {
-            return View();
+            var start = date.Date;
+            var end = start.AddDays(1);
+
+            var data = await _context.SensorData
+                .Where(d => d.SensorId == sensorId && d.Timestamp >= start && d.Timestamp < end)
+                .Select(d => new SensorDataViewModel
+                {
+                    Timestamp = d.Timestamp,
+                    Temperature = d.Temperature,
+                    Humidity = d.Humidity,
+                    Smoke = d.Smoke,
+                    FireScore = d.FireScore
+                })
+                .ToListAsync();
+
+            var archive = await _context.SensorDataArchive
+                .Where(d => d.SensorId == sensorId && d.Timestamp >= start && d.Timestamp < end)
+                .Select(d => new SensorDataViewModel
+                {
+                    Timestamp = d.Timestamp,
+                    Temperature = d.Temperature,
+                    Humidity = d.Humidity,
+                    Smoke = d.Smoke,
+                    FireScore = d.FireScore
+                })
+                .ToListAsync();
+
+            var allData = data
+                .Concat(archive)
+                .OrderBy(d => d.Timestamp)
+                .ToList();
+
+            return View(allData);
         }
 
         [HttpGet]
@@ -101,61 +135,11 @@ namespace ForestFireDetection.Controllers
                     SensorState = sensor.SensorState,
                     SensorPositioningDate = sensor.SensorPositioningDate,
                     SensorDangerSituation = sensor.SensorDangerSituation,
-                    FireScore = lastData?.FireScore 
+                    FireScore = lastData?.FireScore
                 });
             }
 
             return Json(result);
-        }
-
-        [HttpGet]
-        [Authorize(Roles = UserRoles.Admin)]
-        public async Task<IActionResult> GetMonthlyOverview(string sensorId, int year, int month)
-        {
-            var startDate = new DateTime(year, month, 1);
-            var endDate = startDate.AddMonths(1).AddDays(-1);
-
-            var dailySummary = await _context.SensorHourlySummary
-                .Where(d => d.SensorId == sensorId &&
-                            d.Date >= startDate &&
-                            d.Date <= endDate)
-                .GroupBy(d => d.Date)
-                .Select(g => new
-                {
-                    Date = g.Key,
-                    AvgTemperature = g.Average(x => x.AvgTemperature),
-                    AvgHumidity = g.Average(x => x.AvgHumidity),
-                    AvgSmoke = g.Average(x => x.AvgSmoke),
-                    AvgFireScore = g.Average(x => x.AvgFireScore)
-                })
-                .OrderBy(x => x.Date)
-                .ToListAsync();
-
-            return Json(dailySummary);
-        }
-
-        [HttpGet]
-        [Authorize(Roles = UserRoles.Admin)]
-        public async Task<IActionResult> GetDailyDetail(string sensorId, DateTime date)
-        {
-            var start = date.Date;
-            var end = start.AddDays(1);
-
-            var data = await _context.SensorHourlySummary
-                .Where(d => d.SensorId == sensorId &&
-                            d.Date == date.Date)
-                .OrderBy(d => d.Hour)
-                .Select(d => new
-                {
-                    Hour = d.Hour,
-                    Temperature = d.AvgTemperature,
-                    Humidity = d.AvgHumidity,
-                    Smoke = d.AvgSmoke,
-                    FireScore = d.AvgFireScore
-                })
-                .ToListAsync();
-
-            return Json(data);
         }
 
 

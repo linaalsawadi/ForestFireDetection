@@ -39,7 +39,6 @@ public class Program
         builder.Services.AddHostedService<SignalRKeepAliveService>();
         builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                .AddCookie();
-        builder.Services.AddHostedService<HourlyAggregationService>();
         builder.Services.AddHostedService<MonthlyArchivingService>();
 
 
