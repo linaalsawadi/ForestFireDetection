@@ -16,7 +16,6 @@ public class ForestFireDetectionDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Sensor> Sensors { get; set; }
     public DbSet<Alert> Alerts { get; set; }
     public DbSet<SensorData> SensorData { get; set; }
-    public DbSet<SensorHourlySummary> SensorHourlySummary { get; set; }
     public DbSet<SensorDataArchive> SensorDataArchive { get; set; }
 
 

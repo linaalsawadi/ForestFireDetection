@@ -1,34 +1,72 @@
-﻿@{
-    ViewData["Title"] = "Monthly Sensor Report";
-}
+﻿@model List<ForestFireDetection.Models.Sensor>
 
-<h2>📆 Monthly Sensor Report</h2>
+<div class="row">
+    <div class="col-md-12 mt-3">
+        <div class="card card-success card-outline">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-database"></i> Data Reports
+                </h3>
+            </div>
+            <div class="card-body">
+                <!-- Sensor Selector -->
+                <div class="form-group mb-3">
+                    <label for="sensorSelect">Select Sensor:</label>
+                    <select id="sensorSelect" class="form-control">
+                        <option value="">-- Select a sensor --</option>
+                        @foreach (var sensor in Model)
+                        {
+                            <option value="@sensor.SensorId">@sensor.SensorId</option>
+                        }
+                    </select>
+                </div>
 
-<div class="form-group">
-    <label>Select Sensor:</label>
-    <select id="sensorId" class="form-control w-25"></select>
+                <!-- Calendar -->
+                <div id="calendar" style="width: 100%"></div>
+
+                <!-- Button -->
+                <button id="viewReportBtn" class="btn btn-success mt-3">
+                    <i class="fas fa-chart-line"></i> View Daily Report
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
-<div id="monthBar" class="mb-3"></div>
-
-<div id="calendarDays" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px;"></div>
-
-<style>
-    .day-box {
-        padding: 10px;
-        text-align: center;
-        background-color: #f8f9fa;
-        border: 1px solid #ddd;
-        border-radius: 6px;
-        cursor: pointer;
-        transition: background-color 0.2s;
-    }
-
-        .day-box:hover {
-            background-color: #e9ecef;
-        }
-</style>
+@section Styles {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tempusdominus-bootstrap-4/5.39.0/css/tempusdominus-bootstrap-4.min.css" />
+}
 
 @section Scripts {
-    <script src="~/js/sensor-reports.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tempusdominus-bootstrap-4/5.39.0/js/tempusdominus-bootstrap-4.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            $('#calendar').datetimepicker({
+                format: 'L',
+                inline: true,
+                sideBySide: false
+            });
+
+            $('#viewReportBtn').on('click', function () {
+                const sensorId = $('#sensorSelect').val();
+                const date = $('#calendar').datetimepicker('viewDate');
+
+                if (!sensorId) {
+                    alert('Please select a sensor first!');
+                    return;
+                }
+
+                if (!date) {
+                    alert('Please select a date!');
+                    return;
+                }
+
+                const formattedDate = date.format('YYYY-MM-DD');
+                window.location.href = `/Sensors/DailyReport?sensorId=${sensorId}&date=${formattedDate}`;
+            });
+        });
+    </script>
 }

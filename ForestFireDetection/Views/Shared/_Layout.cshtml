@@ -54,6 +54,9 @@
                 <li class="nav-item">
                     <a class="nav-link" data-widget="pushmenu" href="#"><i class="fas fa-bars"></i></a>
                 </li>
+                <li class="nav-item d-none d-sm-inline-block">
+                    <a asp-controller="Home" asp-action="Index" class="nav-link">Home</a>
+                </li>
             </ul>
 
             <ul class="navbar-nav ml-auto">
@@ -117,6 +120,9 @@
                             </li>
                             <li class="nav-item">
                                 <a asp-controller="Sensors" asp-action="Index" class="nav-link"><i class="nav-icon fas fa-microchip"></i><p>Sensors</p></a>
+                            </li>
+                            <li class="nav-item">
+                                <a asp-controller="Sensors" asp-action="Reports" class="nav-link"><i class="nav-icon fas fa-database"></i><p>Data Reports</p></a>
                             </li>
                         }
                         <li class="nav-item">

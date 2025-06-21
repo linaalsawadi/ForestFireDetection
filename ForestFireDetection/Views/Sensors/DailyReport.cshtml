@@ -1,77 +1,59 @@
-﻿@{
-    ViewData["Title"] = "Daily Sensor Report";
-    var sensorId = Context.Request.Query["sensorId"];
-    var date = Context.Request.Query["date"];
+﻿@model List<ForestFireDetection.ViewModels.SensorDataViewModel>
+
+
+<div class="row">
+    <div class="col-md-12 mt-3">
+        <div class="card card-success card-outline">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-database"></i> Daily Sensor Data</h3>
+            </div>
+            <div class="card-body">
+                <table id="sensorDataTable" class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <td><i class="fas fa-clock"></i> Timestamp</td>
+                            <td><i class="fas fa-thermometer-half"></i> Temperature (°C)</td>
+                            <td><i class="fas fa-tint"></i> Humidity (%)</td>
+                            <td><i class="fas fa-smog"></i> Smoke</td>
+                            <td><i class="fas fa-fire"></i> Fire Score</td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@item.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                                <td>@item.Temperature.ToString("F2")</td>
+                                <td>@item.Humidity.ToString("F2")</td>
+                                <td>@item.Smoke.ToString("F2")</td>
+                                <td>@item.FireScore.ToString("F2")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap4.min.css" />
 }
 
-<h2>📅 Daily Report for @sensorId - @date</h2>
-
-<canvas id="dailyChart" height="100"></canvas>
-
-<table class="table table-bordered mt-4">
-    <thead>
-        <tr>
-            <th>Hour</th>
-            <th>Temperature</th>
-            <th>Humidity</th>
-            <th>Smoke</th>
-            <th>FireScore</th>
-        </tr>
-    </thead>
-    <tbody id="detailTableBody"></tbody>
-</table>
-
 @section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap4.min.js"></script>
+
     <script>
-        const sensorId = '@sensorId';
-        const date = '@date';
-
-        async function loadDailyChart() {
-            const res = await fetch(`/Sensors/GetDailyDetail?sensorId=${sensorId}&date=${date}`);
-            const data = await res.json();
-
-            const labels = data.map(d => `${d.hour}:00`);
-            const temp = data.map(d => d.temperature);
-            const hum = data.map(d => d.humidity);
-            const smoke = data.map(d => d.smoke);
-            const fire = data.map(d => d.fireScore);
-
-            const ctx = document.getElementById('dailyChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        { label: 'Temperature', data: temp, borderWidth: 2 },
-                        { label: 'Humidity', data: hum, borderWidth: 2 },
-                        { label: 'Smoke', data: smoke, borderWidth: 2 },
-                        { label: 'FireScore', data: fire, borderWidth: 2 }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        y: { beginAtZero: true }
-                    }
-                }
+        $(document).ready(function () {
+            $('#sensorDataTable').DataTable({
+                paging: true,
+                lengthChange: false,
+                searching: true,
+                ordering: true,
+                info: true,
+                autoWidth: false
             });
-
-            // Fill table
-            const table = document.getElementById('detailTableBody');
-            data.forEach(d => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                            <td>${d.hour}:00</td>
-                            <td>${d.temperature.toFixed(1)}</td>
-                            <td>${d.humidity.toFixed(1)}</td>
-                            <td>${d.smoke.toFixed(1)}</td>
-                            <td>${d.fireScore.toFixed(2)}</td>
-                        `;
-                table.appendChild(row);
-            });
-        }
-
-        window.onload = loadDailyChart;
+        });
     </script>
 }
