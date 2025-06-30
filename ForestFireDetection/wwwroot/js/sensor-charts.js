@@ -104,8 +104,8 @@ chartHubConnection.on("ReceiveSensorData", function (sensorId, latestPoint, stat
         const score = latestPoint.fireScore;
         if (score !== null && score !== undefined) {
             const rounded = score.toFixed(2);
-            if (score >= 35) fireScoreCell.innerHTML = `<span class="fw-bold text-danger">${rounded}</span>`;
-            else if (score >= 25) fireScoreCell.innerHTML = `<span class="fw-bold text-warning">${rounded}</span>`;
+            if (score >= 75) fireScoreCell.innerHTML = `<span class="fw-bold text-danger">${rounded}</span>`;
+            else if (score >= 50) fireScoreCell.innerHTML = `<span class="fw-bold text-warning">${rounded}</span>`;
             else fireScoreCell.innerHTML = `<span class="fw-bold text-success">${rounded}</span>`;
         } else {
             fireScoreCell.innerHTML = '<span class="text-muted">N/A</span>';
@@ -184,8 +184,8 @@ function refreshDashboard() {
 
                 if (fireScore !== null && fireScore !== undefined) {
                     const scoreValue = fireScore.toFixed(2);
-                    if (fireScore >= 35) fireScoreHtml = `<span class="fw-bold text-danger">${scoreValue}</span>`;
-                    else if (fireScore >= 25) fireScoreHtml = `<span class="fw-bold text-warning">${scoreValue}</span>`;
+                    if (fireScore >= 75) fireScoreHtml = `<span class="fw-bold text-danger">${scoreValue}</span>`;
+                    else if (fireScore >= 50) fireScoreHtml = `<span class="fw-bold text-warning">${scoreValue}</span>`;
                     else fireScoreHtml = `<span class="fw-bold text-success">${scoreValue}</span>`;
                 }
 

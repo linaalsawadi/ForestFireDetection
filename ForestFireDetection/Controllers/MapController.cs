@@ -1,5 +1,6 @@
 using ForestFireDetection.Data;
 using ForestFireDetection.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ForestFireDetection.Controllers
@@ -12,7 +13,7 @@ namespace ForestFireDetection.Controllers
         {
             _context = context;
         }
-
+        [Authorize]
         public IActionResult Index()
         {
             var sensors = _context.Sensors.ToList();

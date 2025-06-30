@@ -90,7 +90,7 @@ namespace ForestFireDetection.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = UserRoles.Admin)]
+        [Authorize]
         public async Task<IActionResult> GetSensorData(string sensorId)
         {
             var latest10 = await _context.SensorData
@@ -115,7 +115,7 @@ namespace ForestFireDetection.Controllers
 
 
         [HttpGet]
-        [Authorize(Roles = UserRoles.Admin)]
+        [Authorize]
         public async Task<IActionResult> GetSensors()
         {
             var sensors = await _context.Sensors.ToListAsync();

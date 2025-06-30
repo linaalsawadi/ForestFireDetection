@@ -4,7 +4,7 @@ using ForestFireDetection.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Hospital_appointment_system.Controllers
+namespace ForestFireDetection.Controllers
 {
     public class AccountController : Controller
     {

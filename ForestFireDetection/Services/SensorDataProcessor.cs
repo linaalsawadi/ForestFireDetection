@@ -35,12 +35,17 @@ namespace ForestFireDetection.Services
         public async Task ProcessAsync(SensorData data)
         {
             // FireScore
-            data.FireScore = (data.Temperature * 0.3) + (data.Smoke * 0.6) - (data.Humidity * 0.1);
+            double tempNorm = Math.Min(data.Temperature / 40.0, 1.0);
+            double smokeNorm = Math.Min(data.Smoke / 50.0, 1.0); 
+            double humNorm = Math.Min(data.Humidity / 100.0, 1.0);
+
+            data.FireScore = (tempNorm * 0.4 + smokeNorm * 0.5 + (1 - humNorm) * 0.3) * 100;
+            data.FireScore = Math.Clamp(data.FireScore, 0, 100);
 
             string state;
-            if (data.FireScore >= 35)
+            if (data.FireScore >= 75)
                 state = "red";
-            else if (data.FireScore >= 25)
+            else if (data.FireScore >= 50)
                 state = "yellow";
             else
                 state = "green";
