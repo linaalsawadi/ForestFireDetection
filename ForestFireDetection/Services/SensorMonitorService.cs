@@ -72,7 +72,7 @@ namespace ForestFireDetection.Services
 
                         if (Updated)
                         {
-                            // ✅ إرسال التحديث إلى الخريطة
+                            // إرسال التحديث إلى الخريطة
                             await _mapHub.Clients.All.SendAsync("UpdateSensor", new
                             {
                                 sensorId = sensor.SensorId,
@@ -86,13 +86,13 @@ namespace ForestFireDetection.Services
                                 fireScore = Math.Round((latestData.Temperature * 0.4) + (latestData.Smoke * 0.5) - (latestData.Humidity * 0.2), 2)
                             });
 
-                            // ✅ تحديث العدادات بعد كل حساس (حتى لو تكرار بسيط)
+                            // تحديث العدادات بعد كل حساس (حتى لو تكرار بسيط)
                             var greenCount = await context.Sensors.CountAsync(s => s.SensorState == "green");
                             var yellowCount = await context.Sensors.CountAsync(s => s.SensorState == "yellow");
                             var redCount = await context.Sensors.CountAsync(s => s.SensorState == "red");
                             var offlineCount = await context.Sensors.CountAsync(s => s.SensorState == "offline");
 
-                            // ✅ إرسال نفس البيانات إلى المخططات والعدادات
+                            // إرسال نفس البيانات إلى المخططات والعدادات
                             await _chartHub.Clients.All.SendAsync("ReceiveSensorData", sensor.SensorId, new
                             {
                                 timestamp = latestData.Timestamp,

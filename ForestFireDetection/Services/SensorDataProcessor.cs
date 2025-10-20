@@ -35,9 +35,9 @@ namespace ForestFireDetection.Services
         public async Task ProcessAsync(SensorData data)
         {
             // FireScore
-            double tempNorm = Math.Min(data.Temperature / 40.0, 1.0);
-            double smokeNorm = Math.Min(data.Smoke / 50.0, 1.0); 
-            double humNorm = Math.Min(data.Humidity / 100.0, 1.0);
+            double tempNorm = Math.Min(data.Temperature / 50.0, 1.0);
+            double smokeNorm = Math.Min(data.Smoke / 60.0, 1.0); 
+            double humNorm = Math.Min(data.Humidity / 120.0, 1.0);
 
             data.FireScore = (tempNorm * 0.4 + smokeNorm * 0.5 + (1 - humNorm) * 0.3) * 100;
             data.FireScore = Math.Clamp(data.FireScore, 0, 100);
@@ -70,7 +70,7 @@ namespace ForestFireDetection.Services
                 _context.Sensors.Update(sensor);
             }
 
-            // ✅ تحديث الخريطة
+            // تحديث الخريطة
             await _mapHub.Clients.All.SendAsync("UpdateSensor", new
             {
                 sensorId = data.SensorId,
@@ -83,7 +83,7 @@ namespace ForestFireDetection.Services
                 sensorState = state,
             });
 
-            // ✅ تحديث العدادات
+            // تحديث العدادات
             var greenCount = await _context.Sensors.CountAsync(s => s.SensorState == "green");
             var yellowCount = await _context.Sensors.CountAsync(s => s.SensorState == "yellow");
             var redCount = await _context.Sensors.CountAsync(s => s.SensorState == "red");
@@ -99,7 +99,7 @@ namespace ForestFireDetection.Services
             }, state, sensor.SensorDangerSituation, greenCount, yellowCount, redCount, offlineCount, sensor.SensorPositioningDate);
 
 
-            // ✅ تجميع البيانات
+            // تجميع البيانات
             if (!_buffer.ContainsKey(data.SensorId))
                 _buffer[data.SensorId] = new List<SensorData>();
 
@@ -108,7 +108,7 @@ namespace ForestFireDetection.Services
             if (_buffer[data.SensorId].Count < BATCH_SIZE)
                 return;
 
-            // ✅ حساب المتوسط
+            // حساب المتوسط
             var batch = _buffer[data.SensorId];
             var avgData = new SensorData
             {
@@ -129,18 +129,18 @@ namespace ForestFireDetection.Services
             await _context.SaveChangesAsync();
 
 
-            // ✅ تحقق من وجود حريق فعلي
+            // تحقق من وجود حريق فعلي
             bool isRealFire = await IsRealFireAsync(avgData);
             if (!isRealFire) return;
 
-            // ✅ إعادة الإنذار إذا استمر الخطر
+            // إعادة الإنذار إذا استمر الخطر
             bool shouldSendAlert = !_lastAlertTimes.ContainsKey(avgData.SensorId) ||
                                    (DateTime.UtcNow - _lastAlertTimes[avgData.SensorId]).TotalMinutes >= ALERT_REPEAT_MINUTES;
 
             if (!shouldSendAlert) return;
             _lastAlertTimes[avgData.SensorId] = DateTime.UtcNow;
 
-            // ✅ حساب مدة استمرار الخطر
+            // حساب مدة استمرار الخطر
             if (!_fireStartTimes.ContainsKey(avgData.SensorId))
                 _fireStartTimes[avgData.SensorId] = DateTime.UtcNow;
 

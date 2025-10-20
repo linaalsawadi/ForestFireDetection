@@ -63,7 +63,7 @@ namespace ForestFireDetection.Controllers
             ViewBag.ActiveAlerts = await _context.Alerts.CountAsync(a => a.Status == "NotReviewed");
             ViewBag.OnlineSensors = await _context.Sensors.CountAsync(s => s.SensorState != "Offline");
             ViewBag.OfflineSensors = await _context.Sensors.CountAsync(s => s.SensorState == "Offline");
-            ViewBag.MaxFireScore = await _context.SensorData.MaxAsync(d => d.FireScore);
+            ViewBag.MaxFireScore = await _context.SensorDataArchive.MaxAsync(d => d.FireScore);
 
             ViewBag.RecentAlerts = await _context.Alerts
                 .OrderByDescending(a => a.Timestamp)

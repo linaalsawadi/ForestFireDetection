@@ -1,4 +1,4 @@
-﻿// ✅ تحديث المخططات والصفوف والعدادات بالـ SignalR
+﻿// تحديث المخططات والصفوف والعدادات بالـ SignalR
 const charts = {};
 let expandedSensorIds = new Set();
 
@@ -80,7 +80,7 @@ chartHubConnection.serverTimeoutInMilliseconds = 10 * 60 * 1000;
 chartHubConnection.keepAliveIntervalInMilliseconds = 30 * 1000;
 
 chartHubConnection.on("ReceiveSensorData", function (sensorId, latestPoint, state, danger, totalGreen, totalYellow, totalRed, totalOffline, positioningData) {
-    // ✅ تحديث العدادات
+    // تحديث العدادات
     document.getElementById("count-green").textContent = totalGreen;
     document.getElementById("count-yellow").textContent = totalYellow;
     document.getElementById("count-red").textContent = totalRed;

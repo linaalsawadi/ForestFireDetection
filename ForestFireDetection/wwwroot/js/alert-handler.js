@@ -10,7 +10,7 @@ alertConnection.keepAliveIntervalInMilliseconds = 30 * 1000;
 const activeAlerts = [];
 
 alertConnection.on("NewAlert", function (alert) {
-    console.log("✅ Received NewAlert:", alert);
+    console.log("Received NewAlert:", alert);
 
     // ضمان وجود id فريد
     if (!alert.id) {
@@ -33,11 +33,11 @@ alertConnection.on("UpdateAlertCount", function (count) {
 });
 
 alertConnection.start()
-    .then(() => console.log("✅ Connected to alertHub"))
-    .catch(err => console.error("❌ alertHub connection failed:", err));
+    .then(() => console.log("Connected to alertHub"))
+    .catch(err => console.error("alertHub connection failed:", err));
 
 function renderAlerts() {
-    console.log("🔊 Rendering alerts:", activeAlerts.length);
+    console.log("Rendering alerts:", activeAlerts.length);
 
     // حذف التنبيهات القديمة من الشاشة
     document.querySelectorAll(".alert-popup").forEach(p => p.remove());
@@ -89,7 +89,7 @@ function renderAlerts() {
     const sound = document.getElementById("fire-sound");
     if (sound) {
         sound.play().catch(err => {
-            console.warn("🔇 Autoplay prevented:", err);
+            console.warn("Autoplay prevented:", err);
         });
     }
 }
@@ -123,9 +123,9 @@ function acknowledge(alertId) {
         .then(res => {
             if (res.ok) {
                 clearAlert(alertId);
-                showStackedToast("✅ Fire alert acknowledged successfully!");
+                showStackedToast("Fire alert acknowledged successfully!");
             } else {
-                showStackedToast("❌ Failed to acknowledge alert.", "fa-times-circle", "bg-danger");
+                showStackedToast("Failed to acknowledge alert.", "fa-times-circle", "bg-danger");
             }
         })
         .catch(err => {
@@ -171,7 +171,7 @@ function showStackedToast(message, iconClass = "fa-check-circle", bg = "bg-succe
 }
 
 
-// ✅ إعادة عرض التنبيه المخزن عند التنقل بين الصفحات
+// إعادة عرض التنبيه المخزن عند التنقل بين الصفحات
 const alertJson = sessionStorage.getItem("pendingAlert");
 if (alertJson) {
     try {
