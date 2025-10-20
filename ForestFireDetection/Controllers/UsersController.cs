@@ -4,9 +4,7 @@ using ForestFireDetection.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Localization;
 
 namespace ForestFireDetection.Controllers
 {
@@ -36,7 +34,7 @@ namespace ForestFireDetection.Controllers
                     fireStations.Add(user);
                 }
             }
-            return View(fireStations); // Make sure you have a corresponding view to display the list of patients
+            return View(fireStations);
         }
 
         [Authorize(Roles = UserRoles.Admin)]
@@ -53,7 +51,7 @@ namespace ForestFireDetection.Controllers
                 }
             }
 
-            return View(patients); // Make sure you have a corresponding view to display the list of patients
+            return View(patients);
         }
 
         // GET: User/Create
@@ -81,21 +79,20 @@ namespace ForestFireDetection.Controllers
                     LastName = user.LastName,
                     UserName = user.EmailAddress,
                     Email = user.EmailAddress,
-                    EmailConfirmed = true  // or set based on your application logic
+                    EmailConfirmed = true 
                 };
 
                 var result = await _userManager.CreateAsync(newUser, user.Password);
 
-                // Optionally add user to a role
+                
                 if (result.Succeeded)
                 {
-                    await _userManager.AddToRoleAsync(newUser, UserRoles.User);  // Assign a default role or based on model
+                    await _userManager.AddToRoleAsync(newUser, UserRoles.User);
                 }
 
                 return RedirectToAction(nameof(ListFireStations));
             }
             TempData["Error"] = "entered information is not correct";
-            // If we reach here, something went wrong, re-show form
             return View(user);
         }
 
@@ -115,7 +112,6 @@ namespace ForestFireDetection.Controllers
                 return NotFound();
             }
 
-            // Pass the PatientUser model to the view
             return View(patientUser);
         }
 
@@ -133,12 +129,12 @@ namespace ForestFireDetection.Controllers
             var user = await _userManager.FindByIdAsync(model.Id);
             if (user == null)
             {
-                // Handle the case where the user isn't found
+               
                 return NotFound();
             }
-            //getting the user role
+           
             var isAdmin = await _userManager.IsInRoleAsync(user, "Admin");
-            // Update the user's properties
+          
             user.FirstName = model.FirstName;
             user.LastName = model.LastName; 
             user.UserName = model.Email;
@@ -151,7 +147,6 @@ namespace ForestFireDetection.Controllers
 			}
             else
             {
-                // Handle errors
                 foreach (var error in result.Errors)
                 {
                     ModelState.AddModelError("", error.Description);
@@ -186,7 +181,6 @@ namespace ForestFireDetection.Controllers
             var user1 = await _userManager.FindByIdAsync(User.Id);
             _context.Remove(user1);
             var result = _context.SaveChanges();
-			//checking the user`s role to redirect to its own list page
 			return RedirectToAction(nameof(ListFireStations));
 		}
 
@@ -222,11 +216,9 @@ namespace ForestFireDetection.Controllers
             var user = await _userManager.FindByIdAsync(model.Id);
             if (user == null)
             {
-                // Handle the case where the user isn't found
                 return NotFound();
             }
 
-            // Update the user's properties
             user.FirstName = model.FirstName;
             user.LastName = model.LastName; 
             user.UserName = model.Email;
@@ -239,7 +231,6 @@ namespace ForestFireDetection.Controllers
 			}
             else
             {
-                // Handle errors
                 foreach (var error in result.Errors)
                 {
                     ModelState.AddModelError("", error.Description);
@@ -301,21 +292,19 @@ namespace ForestFireDetection.Controllers
                     LastName = user.LastName, 
                     Email = user.EmailAddress,
                     UserName = user.EmailAddress,
-                    EmailConfirmed = true  // or set based on your application logic
+                    EmailConfirmed = true 
                 };
 
                 var result = await _userManager.CreateAsync(newUser, user.Password);
 
-                // Optionally add user to a role
                 if (result.Succeeded)
                 {
-                    await _userManager.AddToRoleAsync(newUser, UserRoles.Admin);  // Assign a default role or based on model
+                    await _userManager.AddToRoleAsync(newUser, UserRoles.Admin); 
                 }
 
                 return RedirectToAction(nameof(ListAdmin));
             }
             TempData["Error"] = "entered information is not correct";
-            // If we reach here, something went wrong, re-show form
             return View(user);
         }
     }

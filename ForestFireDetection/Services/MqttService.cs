@@ -39,13 +39,13 @@ namespace ForestFireDetection.Services
                     var processor = scope.ServiceProvider.GetRequiredService<SensorDataProcessor>();
 
                     string base64Payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
-                    Console.WriteLine($"📦 MQTT Base64: {base64Payload}");
+                    Console.WriteLine($"MQTT Base64: {base64Payload}");
 
                     string? decryptedRaw = AESHelper.DecryptToRawText(base64Payload);
 
                     if (string.IsNullOrWhiteSpace(decryptedRaw))
                     {
-                        Console.WriteLine("❌ Failed to decrypt message.");
+                        Console.WriteLine("Failed to decrypt message.");
                         return;
                     }
 
@@ -55,7 +55,7 @@ namespace ForestFireDetection.Services
                         var data = JsonSerializer.Deserialize<SensorData>(decryptedRaw);
                         if (data == null || data.SensorId == String.Empty)
                         {
-                            Console.WriteLine("⚠️ JSON deserialization failed or SensorId missing.");
+                            Console.WriteLine("JSON deserialization failed or SensorId missing.");
                             return;
                         }
 
@@ -63,11 +63,11 @@ namespace ForestFireDetection.Services
                         data.Timestamp = DateTime.UtcNow;
 
                         await processor.ProcessAsync(data);
-                        Console.WriteLine($"✅ Decrypted JSON: Temp={data.Temperature}, Hum={data.Humidity}, Smo={data.Smoke}");
+                        Console.WriteLine($"Decrypted JSON: Temp={data.Temperature}, Hum={data.Humidity}, Smo={data.Smoke}");
                     }
                     catch (Exception)
                     {
-                        Console.WriteLine("⚠️ JSON decode error.");
+                        Console.WriteLine("JSON decode error.");
                     }
                 }
                 catch (Exception ex)
@@ -81,13 +81,13 @@ namespace ForestFireDetection.Services
             try
             {
                 await _mqttClient.ConnectAsync(options);
-                Console.WriteLine("✅ Connected to HiveMQ broker.");
+                Console.WriteLine("Connected to HiveMQ broker.");
                 await _mqttClient.SubscribeAsync(Topic);
-                Console.WriteLine($"📡 Subscribed to topic: {Topic}");
+                Console.WriteLine($"Subscribed to topic: {Topic}");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ MQTT Connection Error: {ex.Message}");
+                Console.WriteLine($"MQTT Connection Error: {ex.Message}");
             }
         }
     }

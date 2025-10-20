@@ -71,7 +71,7 @@ public class MonthlyArchivingService : BackgroundService
 
             await context.SaveChangesAsync();
 
-            Console.WriteLine($"✅ Archived {archiveList.Count} records older than {cutoffDate:yyyy-MM-dd}.");
+            Console.WriteLine($"Archived {archiveList.Count} records older than {cutoffDate:yyyy-MM-dd}.");
         }
     }
 }

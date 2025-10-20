@@ -30,7 +30,6 @@ namespace ForestFireDetection.Helpers
                 using Aes aes = Aes.Create();
                 aes.Key = Key;
 
-                // ⛔ لا تستخدم IV الثابت مباشرة — انسخه إلى نسخة جديدة
                 byte[] ivCopy = new byte[16];
                 Array.Copy(IV, ivCopy, 16);
                 aes.IV = ivCopy;
