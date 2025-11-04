@@ -18,28 +18,42 @@ namespace ForestFireDetection.Controllers
         {
             var sensors = _context.Sensors.ToList();
 
-            var sensorData = _context.SensorData
+            // ????? ??? ????? ??? SensorId ?????? ??? ??? ????? (?? ???? ???? SensorData ??????)
+            var latestDataPerSensor = _context.SensorData
                 .GroupBy(d => d.SensorId)
-                .Select(g => g.OrderByDescending(d => d.Timestamp).FirstOrDefault())
+                .Select(g => g.OrderByDescending(d => d.Timestamp)
+                              .Select(d => new {
+                                  d.SensorId,
+                                  d.Latitude,
+                                  d.Longitude,
+                                  d.Temperature,
+                                  d.Humidity,
+                                  d.Smoke,
+                                  d.Timestamp
+                              })
+                              .FirstOrDefault())
                 .ToList();
 
-            var sensorViewModels = (from s in sensors
-                                    join d in sensorData on s.SensorId equals d.SensorId
-                                    select new SensorWithLatestDataViewModel
-                                    {
-                                        SensorId = s.SensorId,
-                                        SensorState = s.SensorState,
-                                        SensorPositioningDate = s.SensorPositioningDate,
-                                        SensorDangerSituation = s.SensorDangerSituation,
-                                        Latitude = d.Latitude,
-                                        Longitude = d.Longitude,
-                                        Temperature = d.Temperature,
-                                        Humidity = d.Humidity,
-                                        Smoke = d.Smoke,
-                                        Timestamp = d.Timestamp
-                                    }).ToList();
+            var sensorViewModels =
+                (from s in sensors
+                 join d in latestDataPerSensor on s.SensorId equals d.SensorId
+                 select new SensorWithLatestDataViewModel
+                 {
+                     SensorId = s.SensorId,
+                     SensorState = s.SensorState,
+                     SensorPositioningDate = s.SensorPositioningDate,
+                     SensorDangerSituation = s.SensorDangerSituation,
+                     Latitude = d.Latitude,
+                     Longitude = d.Longitude,
+                     Temperature = d.Temperature,
+                     Humidity = d.Humidity,
+                     Smoke = d.Smoke,
+                     Timestamp = d.Timestamp
+                 }).ToList();
+
             return View(sensorViewModels);
         }
+
 
     }
 
