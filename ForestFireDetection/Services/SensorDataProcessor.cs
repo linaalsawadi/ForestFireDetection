@@ -35,12 +35,9 @@ namespace ForestFireDetection.Services
         public async Task ProcessAsync(SensorData data)
         {
             // FireScore
-            double tempNorm = Math.Min(data.Temperature / 50.0, 1.0);
-            double smokeNorm = Math.Min(data.Smoke / 60.0, 1.0); 
-            double humNorm = Math.Min(data.Humidity / 120.0, 1.0);
+           var fuzzy = new FuzzyEngine();
+           double fireScore = fuzzy.ComputeFireScore(data.Temperature, data.Humidity, data.Smoke);
 
-            data.FireScore = (tempNorm * 0.4 + smokeNorm * 0.5 + (1 - humNorm) * 0.3) * 100;
-            data.FireScore = Math.Clamp(data.FireScore, 0, 100);
 
             string state;
             if (data.FireScore >= 75)

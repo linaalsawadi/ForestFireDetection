@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ForestFireDetection.Migrations
 {
     [DbContext(typeof(ForestFireDetectionDbContext))]
-    [Migration("20250605211451_UpdateSensorHourlySummaryStructure")]
-    partial class UpdateSensorHourlySummaryStructure
+    [Migration("20251202103505_Initiall")]
+    partial class Initiall
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -253,47 +253,6 @@ namespace ForestFireDetection.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("SensorDataArchive");
-                });
-
-            modelBuilder.Entity("ForestFireDetection.Models.SensorHourlySummary", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<double>("AvgFireScore")
-                        .HasColumnType("float");
-
-                    b.Property<double>("AvgHumidity")
-                        .HasColumnType("float");
-
-                    b.Property<double>("AvgSmoke")
-                        .HasColumnType("float");
-
-                    b.Property<double>("AvgTemperature")
-                        .HasColumnType("float");
-
-                    b.Property<DateTime>("Date")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("Hour")
-                        .HasColumnType("int");
-
-                    b.Property<double>("Latitude")
-                        .HasColumnType("float");
-
-                    b.Property<double>("Longitude")
-                        .HasColumnType("float");
-
-                    b.Property<string>("SensorId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("SensorHourlySummary");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
