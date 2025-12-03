@@ -36,7 +36,7 @@ namespace ForestFireDetection.Services
         {
             // FireScore
            var fuzzy = new FuzzyEngine();
-           data.FireScore = fuzzy.ComputeFireScore(data.Temperature, data.Humidity, data.Smoke);
+            data.FireScore = Math.Clamp(fuzzy.ComputeFireScore(data.Temperature, data.Humidity, data.Smoke), 0, 100);
 
 
             string state;
