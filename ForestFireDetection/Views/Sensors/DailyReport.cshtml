@@ -1,59 +1,49 @@
-﻿@model List<ForestFireDetection.ViewModels.SensorDataViewModel>
+﻿@model List<ForestFireDetection.Models.ViewModels.SensorDataViewModel>
+@{
+    ViewData["Title"] = "Daily Report";
+}
 
-
-<div class="row">
-    <div class="col-md-12 mt-3">
-        <div class="card card-success card-outline">
-            <div class="card-header">
-                <h3 class="card-title"><i class="fas fa-database"></i> Daily Sensor Data</h3>
-            </div>
-            <div class="card-body">
-                <table id="sensorDataTable" class="table table-bordered table-striped">
-                    <thead>
+<div class="card card-success card-outline">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h3 class="card-title mb-0"><i class="fas fa-database me-2"></i>Daily Sensor Data</h3>
+        <a asp-controller="Sensors" asp-action="Reports" class="btn btn-outline-dark btn-sm" style="border-radius:8px;">
+            <i class="fas fa-arrow-left me-1"></i>Back
+        </a>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table id="sensorDataTable" class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th><i class="fas fa-clock me-1"></i>Timestamp</th>
+                        <th><i class="fas fa-thermometer-half me-1" style="color:var(--gs-red)"></i>Temperature</th>
+                        <th><i class="fas fa-tint me-1" style="color:var(--gs-blue)"></i>Humidity</th>
+                        <th><i class="fas fa-smog me-1" style="color:var(--gs-yellow)"></i>Smoke</th>
+                        <th><i class="fas fa-fire me-1"></i>Fire Score</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        var sc = item.FireScore;
+                        var scColor = sc >= 75 ? "var(--gs-red)" : sc >= 50 ? "var(--gs-yellow)" : "var(--gs-green)";
                         <tr>
-                            <td><i class="fas fa-clock"></i> Timestamp</td>
-                            <td><i class="fas fa-thermometer-half"></i> Temperature (°C)</td>
-                            <td><i class="fas fa-tint"></i> Humidity (%)</td>
-                            <td><i class="fas fa-smog"></i> Smoke</td>
-                            <td><i class="fas fa-fire"></i> Fire Score</td>
+                            <td><small class="text-muted">@item.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")</small></td>
+                            <td><span style="color:var(--gs-red);font-weight:600;">@item.Temperature.ToString("F1")°C</span></td>
+                            <td><span style="color:var(--gs-blue);font-weight:600;">@item.Humidity.ToString("F1")%</span></td>
+                            <td><span style="color:var(--gs-yellow);font-weight:600;">@item.Smoke.ToString("F1")</span></td>
+                            <td><span class="fw-bold" style="color:@scColor">@item.FireScore.ToString("F1")%</span></td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var item in Model)
-                        {
-                            <tr>
-                                <td>@item.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")</td>
-                                <td>@item.Temperature.ToString("F2")</td>
-                                <td>@item.Humidity.ToString("F2")</td>
-                                <td>@item.Smoke.ToString("F2")</td>
-                                <td>@item.FireScore.ToString("F2")</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
+                    }
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
 
-@section Styles {
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap4.min.css" />
-}
-
+@section Styles { <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap4.min.css" /> }
 @section Scripts {
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap4.min.js"></script>
-
-    <script>
-        $(document).ready(function () {
-            $('#sensorDataTable').DataTable({
-                paging: true,
-                lengthChange: false,
-                searching: true,
-                ordering: true,
-                info: true,
-                autoWidth: false
-            });
-        });
-    </script>
+    <script>$(function(){ $('#sensorDataTable').DataTable({ paging:true, lengthChange:false, searching:true, ordering:true, info:true, autoWidth:false, pageLength:25 }); });</script>
 }

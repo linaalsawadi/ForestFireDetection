@@ -3,113 +3,130 @@
     ViewData["Title"] = "Sensors";
 }
 
-<div class="row">
-    <div class="col-md-12 mt-3">
-        <div class="card card-success card-outline">
-            <div class="card-header">
-                <h3 class="card-title"><i class="fas fa-microchip"></i> Sensors List</h3>
+<!-- Status Summary -->
+<div class="row g-3 mb-3">
+    <div class="col-xl-3 col-6">
+        <div class="gs-mini-stat">
+            <div class="gs-mini-stat-icon" style="background:rgba(34,197,94,.1);color:var(--gs-green);"><i class="fas fa-check-circle"></i></div>
+            <div><span class="gs-mini-stat-value" id="count-green">@Model.Count(s => s.Sensor.SensorState == "green")</span><span class="gs-mini-stat-label">Normal</span></div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-6">
+        <div class="gs-mini-stat">
+            <div class="gs-mini-stat-icon" style="background:rgba(245,158,11,.1);color:var(--gs-yellow);"><i class="fas fa-exclamation-triangle"></i></div>
+            <div><span class="gs-mini-stat-value" id="count-yellow">@Model.Count(s => s.Sensor.SensorState == "yellow")</span><span class="gs-mini-stat-label">Warning</span></div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-6">
+        <div class="gs-mini-stat">
+            <div class="gs-mini-stat-icon" style="background:rgba(239,68,68,.1);color:var(--gs-red);"><i class="fas fa-fire-alt"></i></div>
+            <div><span class="gs-mini-stat-value" id="count-red">@Model.Count(s => s.Sensor.SensorState == "red")</span><span class="gs-mini-stat-label">Critical</span></div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-6">
+        <div class="gs-mini-stat">
+            <div class="gs-mini-stat-icon" style="background:rgba(107,114,128,.1);color:var(--gs-gray-500);"><i class="fas fa-power-off"></i></div>
+            <div><span class="gs-mini-stat-value" id="count-offline">@Model.Count(s => s.Sensor.SensorState == "offline")</span><span class="gs-mini-stat-label">Offline</span></div>
+        </div>
+    </div>
+</div>
+
+<!-- Sensors Table -->
+<div class="card card-success card-outline">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h3 class="card-title mb-0"><i class="fas fa-microchip me-2"></i>Sensors List</h3>
+        <div style="max-width:220px;">
+            <div class="input-group input-group-sm">
+                <span class="input-group-text"><i class="fas fa-search text-muted"></i></span>
+                <input type="text" class="form-control" id="sensorSearch" placeholder="Search sensors...">
             </div>
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div class="d-flex align-items-center gap-3 flex-wrap">
-                        <div class="d-flex align-items-center">
-                            <span class="status-label text-muted me-1">Normal</span>
-                            <span id="count-green" class="status-badge bg-success">@Model.Count(s => s.Sensor.SensorState == "green")</span>
-                        </div>
-                        <div class="d-flex align-items-center">
-                            <span class="status-label text-muted me-1">Warning</span>
-                            <span id="count-yellow" class="status-badge bg-warning text-dark">@Model.Count(s => s.Sensor.SensorState == "yellow")</span>
-                        </div>
-                        <div class="d-flex align-items-center">
-                            <span class="status-label text-muted me-1">Critical</span>
-                            <span id="count-red" class="status-badge bg-danger">@Model.Count(s => s.Sensor.SensorState == "red")</span>
-                        </div>
-                        <div class="d-flex align-items-center">
-                            <span class="status-label text-muted me-1">Offline</span>
-                            <span id="count-offline" class="status-badge bg-secondary">@Model.Count(s => s.Sensor.SensorState == "offline")</span>
-                        </div>
-                    </div>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" id="sensorTable">
+                <thead>
+                    <tr>
+                        <th>Sensor ID</th>
+                        <th>Status</th>
+                        <th>Fire Score</th>
+                        <th>Last Update</th>
+                        <th>Danger</th>
+                        <th style="width:40px;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        var sensor = item.Sensor;
+                        var lastData = item.LastData;
+                        var score = lastData?.FireScore ?? 0;
+                        var scoreColor = score >= 75 ? "var(--gs-red)" : score >= 50 ? "var(--gs-yellow)" : "var(--gs-green)";
 
-                    <div class="form-group" style="max-width: 250px;">
-                        <div class="input-group">
-                            <span class="input-group-text bg-white border-end-0">
-                                <i class="fas fa-search text-muted"></i>
-                            </span>
-                            <input type="text" class="form-control border-start-0" id="sensorSearch"
-                                   placeholder="Search" aria-label="Search">
-                        </div>
-                    </div>
-                </div>
-
-                <table class="table table-bordered table-hover" id="sensorTable">
-                    <thead>
-                        <tr>
-                            <td><i class="fas fa-barcode"></i> Sensor ID</td>
-                            <td><i class="fas fa-thermometer-half"></i> Status</td>
-                            <td><i class="fas fa-fire"></i> Fire Score</td>
-                            <td><i class="fas fa-calendar-alt"></i> Positioning Date</td>
-                            <td><i class="fas fa-exclamation-triangle"></i> Danger</td>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var item in Model)
-                        {
-                            var sensor = item.Sensor;
-                            var lastData = item.LastData;
-
-                            <tr data-widget="expandable-table" aria-expanded="false">
-                                <td>@sensor.SensorId</td>
-                                <td>
-                                    @if (sensor.SensorState == "red")
-                                    {
+                        <tr class="sensor-row" style="cursor:pointer;" data-sensor-id="@sensor.SensorId">
+                            <td>
+                                <div style="display:flex;align-items:center;gap:10px;">
+                                    <div class="gs-sensor-dot gs-dot-@sensor.SensorState"></div>
+                                    <span class="fw-bold">@sensor.SensorId</span>
+                                </div>
+                            </td>
+                            <td>
+                                @switch (sensor.SensorState)
+                                {
+                                    case "red":
                                         <span class="badge bg-danger rounded-pill">Critical</span>
-                                    }
-                                    else if (sensor.SensorState == "yellow")
-                                    {
+                                        break;
+                                    case "yellow":
                                         <span class="badge bg-warning text-dark rounded-pill">Warning</span>
-                                    }
-                                    else if (sensor.SensorState == "green")
-                                    {
+                                        break;
+                                    case "green":
                                         <span class="badge bg-success rounded-pill">Normal</span>
-                                    }
-                                    else
-                                    {
+                                        break;
+                                    default:
                                         <span class="badge bg-secondary rounded-pill">Offline</span>
-                                    }
-                                </td>
-                                <td>
-                                    @if (lastData != null)
-                                    {
-                                        if (lastData.FireScore >= 75)
-                                        {
-                                            <span class="fw-bold text-danger">@lastData.FireScore</span>
-                                        }
-                                        else if (lastData.FireScore >= 50)
-                                        {
-                                            <span class="fw-bold text-warning">@lastData.FireScore</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="fw-bold text-success">@lastData.FireScore</span>
-                                        }
-                                    }
-                                    else
-                                    {
-                                        <span class="text-muted">N/A</span>
-                                    }
-                                </td>
-                                <td>@sensor.SensorPositioningDate.ToString()</td>
-                                <td>@(sensor.SensorDangerSituation ? "Yes" : "No")</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
+                                        break;
+                                }
+                            </td>
+                            <td>
+                                @if (lastData != null)
+                                {
+                                    <span class="fw-bold" style="color:@scoreColor">@Math.Round(score, 1)%</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">—</span>
+                                }
+                            </td>
+                            <td><small class="text-muted">@sensor.SensorPositioningDate.ToLocalTime().ToString("MMM dd, HH:mm")</small></td>
+                            <td>
+                                @if (sensor.SensorDangerSituation)
+                                {
+                                    <span style="color:var(--gs-red);font-weight:600;"><i class="fas fa-exclamation-circle me-1"></i>Yes</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">No</span>
+                                }
+                            </td>
+                            <td><i class="fas fa-chevron-down text-muted" style="font-size:.7rem;transition:transform .2s;"></i></td>
+                        </tr>
+                        <tr class="sensor-charts-row d-none" data-sensor-id="@sensor.SensorId">
+                            <td colspan="6" style="padding:0;border-top:none;">
+                                <div id="charts-container-@sensor.SensorId" class="gs-sensor-expand">
+                                    <div style="text-align:center;padding:30px;">
+                                        <div class="spinner-border text-success spinner-border-sm"></div>
+                                        <p class="text-muted mt-2" style="font-size:.82rem;">Loading charts...</p>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
 
 @section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="~/js/sensor-charts.js"></script>
 }

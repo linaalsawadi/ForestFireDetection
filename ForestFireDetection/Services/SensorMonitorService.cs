@@ -16,15 +16,21 @@ namespace ForestFireDetection.Services
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly IHubContext<MapHub> _mapHub;
         private readonly IHubContext<ChartHub> _chartHub;
+        private readonly ILogger<SensorMonitorService> _logger;
 
-        private const int CHECK_INTERVAL_SECONDS = 60;
-        private const int OFFLINE_THRESHOLD_MINUTES = 3;
+        private const int CheckIntervalSeconds = 60;
+        private const int OfflineThresholdMinutes = 3;
 
-        public SensorMonitorService(IServiceScopeFactory scopeFactory, IHubContext<MapHub> mapHub, IHubContext<ChartHub> chartHub)
+        public SensorMonitorService(
+            IServiceScopeFactory scopeFactory,
+            IHubContext<MapHub> mapHub,
+            IHubContext<ChartHub> chartHub,
+            ILogger<SensorMonitorService> logger)
         {
             _scopeFactory = scopeFactory;
             _mapHub = mapHub;
             _chartHub = chartHub;
+            _logger = logger;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -33,46 +39,42 @@ namespace ForestFireDetection.Services
             {
                 try
                 {
-                    bool Updated = false;
                     using var scope = _scopeFactory.CreateScope();
                     var context = scope.ServiceProvider.GetRequiredService<ForestFireDetectionDbContext>();
 
                     var sensors = await context.Sensors
-                        .Include(s => s.DataHistory.OrderByDescending(d => d.Timestamp))
-                        .ToListAsync();
+                        .Include(s => s.DataHistory.OrderByDescending(d => d.Timestamp).Take(1))
+                        .ToListAsync(stoppingToken);
+
+                    bool anyUpdated = false;
 
                     foreach (var sensor in sensors)
                     {
                         var latestData = sensor.DataHistory.FirstOrDefault();
                         if (latestData == null) continue;
-                        Updated = false;
 
                         var minutesSinceLastUpdate = (DateTime.UtcNow - sensor.SensorPositioningDate).TotalMinutes;
-
+                        bool updated = false;
                         string state = sensor.SensorState;
 
-                        if (minutesSinceLastUpdate > OFFLINE_THRESHOLD_MINUTES)
+                        if (minutesSinceLastUpdate > OfflineThresholdMinutes && sensor.SensorState != "offline")
                         {
-                            if (sensor.SensorState != "offline")
-                            {
-                                sensor.SensorState = "offline";
-                                sensor.SensorDangerSituation = false;
-                                state = "offline";
-                                Updated = true;
-                            }
+                            sensor.SensorState = "offline";
+                            sensor.SensorDangerSituation = false;
+                            state = "offline";
+                            updated = true;
                         }
-                        else if (sensor.SensorState == "offline")
+                        else if (minutesSinceLastUpdate <= OfflineThresholdMinutes && sensor.SensorState == "offline")
                         {
                             sensor.SensorState = "green";
                             sensor.SensorDangerSituation = false;
                             state = "green";
-                            Updated = true;
+                            updated = true;
                         }
-                        await context.SaveChangesAsync();
 
-                        if (Updated)
+                        if (updated)
                         {
-                            // إرسال التحديث إلى الخريطة
+                            anyUpdated = true;
                             await _mapHub.Clients.All.SendAsync("UpdateSensor", new
                             {
                                 sensorId = sensor.SensorId,
@@ -83,35 +85,35 @@ namespace ForestFireDetection.Services
                                 longitude = latestData.Longitude,
                                 timestamp = latestData.Timestamp,
                                 sensorState = state,
-                                fireScore = Math.Round((latestData.Temperature * 0.4) + (latestData.Smoke * 0.5) - (latestData.Humidity * 0.2), 2)
-                            });
+                                fireScore = Math.Round(latestData.FireScore, 2)
+                            }, stoppingToken);
 
-                            // تحديث العدادات بعد كل حساس (حتى لو تكرار بسيط)
-                            var greenCount = await context.Sensors.CountAsync(s => s.SensorState == "green");
-                            var yellowCount = await context.Sensors.CountAsync(s => s.SensorState == "yellow");
-                            var redCount = await context.Sensors.CountAsync(s => s.SensorState == "red");
-                            var offlineCount = await context.Sensors.CountAsync(s => s.SensorState == "offline");
+                            var greenCount = await context.Sensors.CountAsync(s => s.SensorState == "green", stoppingToken);
+                            var yellowCount = await context.Sensors.CountAsync(s => s.SensorState == "yellow", stoppingToken);
+                            var redCount = await context.Sensors.CountAsync(s => s.SensorState == "red", stoppingToken);
+                            var offlineCount = await context.Sensors.CountAsync(s => s.SensorState == "offline", stoppingToken);
 
-                            // إرسال نفس البيانات إلى المخططات والعدادات
                             await _chartHub.Clients.All.SendAsync("ReceiveSensorData", sensor.SensorId, new
                             {
                                 timestamp = latestData.Timestamp,
                                 temperature = latestData.Temperature,
                                 humidity = latestData.Humidity,
                                 smoke = latestData.Smoke
-                            }, state, sensor.SensorDangerSituation, greenCount, yellowCount, redCount, offlineCount, sensor.SensorPositioningDate);
-
+                            }, state, sensor.SensorDangerSituation,
+                               greenCount, yellowCount, redCount, offlineCount,
+                               sensor.SensorPositioningDate, stoppingToken);
                         }
                     }
 
-                    await context.SaveChangesAsync();
+                    if (anyUpdated)
+                        await context.SaveChangesAsync(stoppingToken);
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine("[SensorMonitorService] Error: " + ex.Message);
+                    _logger.LogError(ex, "Error in SensorMonitorService");
                 }
 
-                await Task.Delay(TimeSpan.FromSeconds(CHECK_INTERVAL_SECONDS), stoppingToken);
+                await Task.Delay(TimeSpan.FromSeconds(CheckIntervalSeconds), stoppingToken);
             }
         }
     }

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
 using System.Collections.Generic;
@@ -9,17 +8,26 @@ namespace ForestFireDetection.Helpers
 {
     public static class AESHelper
     {
-        private static readonly byte[] Key = new byte[]
-        {
+        private static byte[] _key =
+        [
             0x6C, 0x6F, 0x76, 0x65, 0x66, 0x6F, 0x72, 0x65,
             0x73, 0x74, 0x65, 0x73, 0x74, 0x31, 0x32, 0x33
-        };
+        ];
 
-        private static readonly byte[] IV = new byte[]
-        {
+        private static byte[] _iv =
+        [
             0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
             0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF
-        };
+        ];
+
+        /// <summary>
+        /// Override default key/IV from configuration.
+        /// </summary>
+        public static void Configure(byte[] key, byte[] iv)
+        {
+            _key = key ?? throw new ArgumentNullException(nameof(key));
+            _iv = iv ?? throw new ArgumentNullException(nameof(iv));
+        }
 
         public static string? DecryptToRawText(string base64Input)
         {
@@ -28,10 +36,10 @@ namespace ForestFireDetection.Helpers
                 byte[] cipherBytes = Convert.FromBase64String(base64Input);
 
                 using Aes aes = Aes.Create();
-                aes.Key = Key;
+                aes.Key = _key;
 
                 byte[] ivCopy = new byte[16];
-                Array.Copy(IV, ivCopy, 16);
+                Array.Copy(_iv, ivCopy, 16);
                 aes.IV = ivCopy;
 
                 aes.Mode = CipherMode.CBC;
@@ -41,7 +49,7 @@ namespace ForestFireDetection.Helpers
                 using var ms = new MemoryStream(cipherBytes);
                 using var cs = new CryptoStream(ms, decryptor, CryptoStreamMode.Read);
 
-                List<byte> decryptedList = new();
+                List<byte> decryptedList = [];
                 byte[] buffer = new byte[1024];
                 int bytesRead;
                 while ((bytesRead = cs.Read(buffer, 0, buffer.Length)) > 0)
@@ -49,7 +57,7 @@ namespace ForestFireDetection.Helpers
                     decryptedList.AddRange(buffer[..bytesRead]);
                 }
 
-                byte[] decrypted = decryptedList.ToArray();
+                byte[] decrypted = [.. decryptedList];
                 string result = Encoding.UTF8.GetString(decrypted).Trim('\0', '\r', '\n', '\t', '\u0001', '\u001F');
 
                 int jsonStart = result.IndexOf('{');
@@ -69,6 +77,5 @@ namespace ForestFireDetection.Helpers
                 return null;
             }
         }
-
     }
 }

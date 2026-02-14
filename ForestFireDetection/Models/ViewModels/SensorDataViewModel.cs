@@ -1,4 +1,4 @@
-﻿namespace ForestFireDetection.ViewModels
+namespace ForestFireDetection.Models.ViewModels
 {
     public class SensorDataViewModel
     {
@@ -8,5 +8,4 @@
         public double Smoke { get; set; }
         public double FireScore { get; set; }
     }
-
 }

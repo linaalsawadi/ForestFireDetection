@@ -8,7 +8,9 @@ namespace ForestFireDetection.Models
         [Key]
         public int Id { get; set; }
 
-        public string SensorId { get; set; }
+        [Required]
+        [MaxLength(450)]
+        public string SensorId { get; set; } = string.Empty;
 
         public double Latitude { get; set; }
 

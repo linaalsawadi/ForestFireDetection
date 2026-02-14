@@ -1,6 +1,5 @@
-﻿using ForestFireDetection.Data;
-using ForestFireDetection.Models;
-using ForestFireDetection.ViewModels;
+﻿using ForestFireDetection.Models;
+using ForestFireDetection.Models.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,66 +7,50 @@ namespace ForestFireDetection.Controllers
 {
     public class AccountController : Controller
     {
-        private readonly UserManager<ApplicationUser> _userManeger;
-        private readonly SignInManager<ApplicationUser> _signInManeger;
-        private readonly ForestFireDetectionDbContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly SignInManager<ApplicationUser> _signInManager;
 
-        public AccountController(UserManager<ApplicationUser> userManeger,
-            SignInManager<ApplicationUser> signInManeger,
-            ForestFireDetectionDbContext context)
+        public AccountController(
+            UserManager<ApplicationUser> userManager,
+            SignInManager<ApplicationUser> signInManager)
         {
-            _userManeger = userManeger;
-            _signInManeger = signInManeger;
-            _context= context;
+            _userManager = userManager;
+            _signInManager = signInManager;
         }
 
         [HttpGet]
         public IActionResult Login()
         {
-            var response = new LoginViewModel();
-            return View(response);
+            return View(new LoginViewModel());
         }
 
         [HttpPost]
-        public async Task<IActionResult> Login(LoginViewModel loginViewModel)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Login(LoginViewModel model)
         {
             if (!ModelState.IsValid)
-            {
-                return View(loginViewModel);
-            }
+                return View(model);
 
-            var user = await _userManeger.FindByEmailAsync(loginViewModel.Email);
+            var user = await _userManager.FindByEmailAsync(model.Email);
             if (user != null)
             {
-                var passCheck = await _userManeger.CheckPasswordAsync(user, loginViewModel.Password);
-                if (passCheck)
-                {
-                    var result = await _signInManeger.PasswordSignInAsync(
-                        user,
-                        loginViewModel.Password,
-                        loginViewModel.RememberMe,
-                        lockoutOnFailure: false);
+                var result = await _signInManager.PasswordSignInAsync(
+                    user, model.Password, model.RememberMe, lockoutOnFailure: false);
 
-                    if (result.Succeeded)
-                    {
-                        return RedirectToAction("Index", "Home");
-                    }
-                }
-
-                TempData["Error"] = "Wrong credentials. Please try again.";
-                return View(loginViewModel);
+                if (result.Succeeded)
+                    return RedirectToAction("Index", "Home");
             }
 
             TempData["Error"] = "Wrong credentials. Please try again.";
-            return View(loginViewModel);
+            return View(model);
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
         {
-            await _signInManeger.SignOutAsync();
-            return RedirectToAction("Index", "Home");
+            await _signInManager.SignOutAsync();
+            return RedirectToAction("Login", "Account");
         }
-
     }
 }

@@ -1,70 +1,63 @@
 ﻿@model IEnumerable<ApplicationUser>
 @{
-    ViewData["Title"] = "Admins List";
+    ViewData["Title"] = "Administrators";
 }
 
-<div class="row ">
-    <div class="col-md-12 mt-3">
-        <div class="card card-success card-outline">
-            <div class="card-header">
-                <h3 class="card-title"><i class="fas fa-user-tie"></i> Admins List</h3>
-            </div>
-
-            <div class="card-body">
-                <div class="row">
-
-                    <div class="col mb-3">
-                        <a asp-controller="Users" asp-action="CreateAdmin" class="btn btn-black btn-outline-dark">
-                            <i class="bi bi-person-add"></i> &nbsp; Add an Admin
-                        </a>
-                    </div>
-
-                    <div class="form-group" style="max-width: 250px; float: right;">
-                        <div class="input-group">
-                            <span class="input-group-text bg-white border-end-0">
-                                <i class="fas fa-search text-muted"></i>
-                            </span>
-                            <input type="text" class="form-control border-start-0" id="adminSearch"
-                                    placeholder="Search" aria-label="Search">
-                        </div>
-                    </div>
+<div class="card card-success card-outline">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h3 class="card-title mb-0"><i class="fas fa-user-shield me-2"></i>Administrators</h3>
+        <div class="d-flex align-items-center gap-2">
+            <div style="max-width:200px;">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text"><i class="fas fa-search text-muted"></i></span>
+                    <input type="text" class="form-control" id="adminSearch" placeholder="Search...">
                 </div>
-
-                <table class="table table-bordered table-hover" id="adminTable">
-                    <thead>
-                        <tr>
-                            <td>@Html.DisplayNameFor(model => model.Id)</td>
-                            <td>@Html.DisplayNameFor(model => model.FirstName)</td>
-                            <td>@Html.DisplayNameFor(model => model.LastName)</td>
-                            <td>@Html.DisplayNameFor(model => model.Email)</td>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var item in Model)
-                        {
-                            <tr>
-                                <td>@item.Id</td>
-                                <td width="20%">@item.FirstName</td>
-                                <td width="20%">@item.LastName</td>
-                                <td>@item.Email</td>
-                                <td>
-                                    <div class="btn-group" role="group">
-                                        <a asp-controller="Users" asp-action="EditAdmin" asp-route-id="@item.Id"
-                                            class="btn btn-outline-dark btn-sm">
-                                            <i class="bi bi-pencil-square"></i> Edit
-                                        </a>
-                                        <a asp-controller="Users" asp-action="DeleteAdmin" asp-route-id="@item.Id"
-                                            class="btn btn-outline-danger btn-sm">
-                                            <i class="bi bi-trash"></i> Delete
-                                        </a>
-                                    </div>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
             </div>
+            <a asp-controller="Users" asp-action="CreateAdmin" class="btn btn-success btn-sm">
+                <i class="fas fa-plus me-1"></i>Add Admin
+            </a>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" id="adminTable">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th class="text-center" style="width:140px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>
+                                <div style="display:flex;align-items:center;gap:10px;">
+                                    <div class="gs-avatar" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);">
+                                        @(item.FirstName?[0].ToString().ToUpper())@(item.LastName?[0].ToString().ToUpper())
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold" style="font-size:.875rem;">@item.FirstName @item.LastName</div>
+                                        <small class="text-muted">Administrator</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td style="vertical-align:middle;"><span class="text-muted">@item.Email</span></td>
+                            <td class="text-center" style="vertical-align:middle;">
+                                <div class="btn-group" role="group">
+                                    <a asp-controller="Users" asp-action="EditAdmin" asp-route-id="@item.Id" class="btn btn-outline-dark btn-sm" style="border-radius:6px 0 0 6px;">
+                                        <i class="fas fa-pen"></i>
+                                    </a>
+                                    <a asp-controller="Users" asp-action="DeleteAdmin" asp-route-id="@item.Id" class="btn btn-outline-danger btn-sm" style="border-radius:0 6px 6px 0;">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
@@ -72,13 +65,8 @@
 @section Scripts {
     <script>
         document.getElementById("adminSearch").addEventListener("keyup", function () {
-            const input = this.value.toLowerCase();
-            const rows = document.querySelectorAll("#adminTable tbody tr");
-
-            rows.forEach(row => {
-                const text = row.textContent.toLowerCase();
-                row.style.display = text.includes(input) ? "" : "none";
-            });
+            const v = this.value.toLowerCase();
+            document.querySelectorAll("#adminTable tbody tr").forEach(r => r.style.display = r.textContent.toLowerCase().includes(v) ? "" : "none");
         });
     </script>
 }

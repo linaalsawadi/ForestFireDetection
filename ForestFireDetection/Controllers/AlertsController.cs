@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ForestFireDetection.Data;
-using ForestFireDetection.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using ForestFireDetection.Hubs;
@@ -30,6 +29,7 @@ namespace ForestFireDetection.Controllers
         }
 
         [HttpPost]
+        [IgnoreAntiforgeryToken]
         public async Task<IActionResult> Acknowledge(Guid id)
         {
             var alert = await _context.Alerts.FindAsync(id);
@@ -49,6 +49,7 @@ namespace ForestFireDetection.Controllers
         }
 
         [HttpPost]
+        [IgnoreAntiforgeryToken]
         public async Task<IActionResult> Resolve(Guid id, string resolutionNote)
         {
             var alert = await _context.Alerts.FindAsync(id);

@@ -1,7 +1,8 @@
 using ForestFireDetection.Data;
-using ForestFireDetection.ViewModels;
+using ForestFireDetection.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace ForestFireDetection.Controllers
 {
@@ -13,16 +14,17 @@ namespace ForestFireDetection.Controllers
         {
             _context = context;
         }
-        [Authorize]
-        public IActionResult Index()
-        {
-            var sensors = _context.Sensors.ToList();
 
-            // ????? ??? ????? ??? SensorId ?????? ??? ??? ????? (?? ???? ???? SensorData ??????)
-            var latestDataPerSensor = _context.SensorData
+        [Authorize]
+        public async Task<IActionResult> Index()
+        {
+            var sensors = await _context.Sensors.ToListAsync();
+
+            var latestDataPerSensor = await _context.SensorData
                 .GroupBy(d => d.SensorId)
                 .Select(g => g.OrderByDescending(d => d.Timestamp)
-                              .Select(d => new {
+                              .Select(d => new
+                              {
                                   d.SensorId,
                                   d.Latitude,
                                   d.Longitude,
@@ -32,11 +34,11 @@ namespace ForestFireDetection.Controllers
                                   d.Timestamp
                               })
                               .FirstOrDefault())
-                .ToList();
+                .ToListAsync();
 
             var sensorViewModels =
                 (from s in sensors
-                 join d in latestDataPerSensor on s.SensorId equals d.SensorId
+                 join d in latestDataPerSensor on s.SensorId equals d!.SensorId
                  select new SensorWithLatestDataViewModel
                  {
                      SensorId = s.SensorId,
@@ -53,8 +55,5 @@ namespace ForestFireDetection.Controllers
 
             return View(sensorViewModels);
         }
-
-
     }
-
 }

@@ -11,13 +11,7 @@ const activeAlerts = [];
 
 alertConnection.on("NewAlert", function (alert) {
     console.log("Received NewAlert:", alert);
-
-    // ضمان وجود id فريد
-    if (!alert.id) {
-        alert.id = alert.sensorId + "_" + Date.now();
-    }
-
-    // تجاهل التكرارات
+    if (!alert.id) alert.id = alert.sensorId + "_" + Date.now();
     if (!activeAlerts.some(a => a.id === alert.id)) {
         activeAlerts.push(alert);
         renderAlerts();
@@ -32,90 +26,118 @@ alertConnection.on("UpdateAlertCount", function (count) {
     }
 });
 
+alertConnection.on("KeepAlive", (timestamp) => {
+    console.log("KeepAlive from server:", timestamp);
+});
+
 alertConnection.start()
     .then(() => console.log("Connected to alertHub"))
     .catch(err => console.error("alertHub connection failed:", err));
 
 function renderAlerts() {
-    console.log("Rendering alerts:", activeAlerts.length);
+    // Remove old popups
+    document.querySelectorAll(".gs-alert-container").forEach(p => p.remove());
 
-    // حذف التنبيهات القديمة من الشاشة
-    document.querySelectorAll(".alert-popup").forEach(p => p.remove());
+    if (activeAlerts.length === 0) {
+        const overlay = document.getElementById("alert-overlay");
+        if (overlay) { overlay.classList.remove("active"); overlay.style.display = "none"; }
+        const sound = document.getElementById("fire-sound");
+        if (sound) { sound.pause(); sound.currentTime = 0; }
+        return;
+    }
 
-    // إنشاء خلفية وميض إذا غير موجودة
-    const overlay = document.getElementById("alert-overlay") || (() => {
-        const div = document.createElement("div");
-        div.id = "alert-overlay";
-        document.body.appendChild(div);
-        return div;
-    })();
+    // Show overlay
+    const overlay = document.getElementById("alert-overlay");
+    if (overlay) { overlay.classList.add("active"); overlay.style.display = "block"; }
 
-    overlay.classList.add("blink");
-    overlay.style.display = "block";
+    // Build alert panel
+    const container = document.createElement("div");
+    container.className = "gs-alert-container";
 
-    // إنشاء كل تنبيه على شكل شريط مستقل
-    activeAlerts.forEach((alert, index) => {
-        const popup = document.createElement("div");
-        popup.className = "alert-popup";
-        popup.style.bottom = `${10 + index * 60}px`;
+    let alertsHtml = "";
+    activeAlerts.forEach((alert, i) => {
+        const score = Math.round(alert.fireScore ?? 0);
+        const severity = score >= 75 ? "critical" : score >= 50 ? "high" : "medium";
+        const severityLabel = score >= 75 ? "CRITICAL" : score >= 50 ? "HIGH" : "MEDIUM";
+        const severityColor = score >= 75 ? "#ef4444" : score >= 50 ? "#f59e0b" : "#f97316";
 
-        popup.innerHTML = `
-            <div class="alert-text">
-                <h4><i class="fas fa-fire-alt text-danger"></i> Fire detected</h4>
-                <span><b>Sensor ID:</b> ${alert.sensorId}</span>
-                <span><b>Fire Score:</b> <span class="text-danger fw-bold">${Math.round(alert.fireScore ?? 0)}%</span></span>
-                <span><b>Temp:</b> ${alert.temperature}°C</span>
-                <span><b>Smoke:</b> ${alert.smoke}</span>
-                <span><b>Humidity:</b> ${alert.humidity}</span>
-                <span><b>Location:</b> (${alert.latitude}, ${alert.longitude})</span>
-
+        alertsHtml += `
+        <div class="gs-alert-card gs-alert-${severity}" data-alert-index="${i}">
+            <div class="gs-alert-header">
+                <div class="gs-alert-severity">
+                    <span class="gs-severity-dot"></span>
+                    <span class="gs-severity-label">${severityLabel}</span>
+                </div>
+                <div class="gs-alert-score" style="color:${severityColor}">${score}%</div>
             </div>
-            <div class="alert-actions">
-                <button onclick="clearAlert('${alert.id}')" class="btn btn-secondary me-2">Clear</button>
-                <button onclick='zoomToSensorFromAlert(
-                    ${alert.latitude}, 
-                    ${alert.longitude}, 
-                    "${alert.sensorId}", 
-                    ${JSON.stringify(alert).replace(/"/g, '&quot;')}
-                )' class="btn btn-primary me-2">Zoom</button>
-                <button onclick="acknowledge('${alert.id}')" class="btn btn-danger">Acknowledge</button>
+            <div class="gs-alert-title">
+                <i class="fas fa-fire-alt"></i>
+                <span>Fire Detected — ${alert.sensorId}</span>
             </div>
-        `;
-
-        document.body.appendChild(popup);
+            <div class="gs-alert-metrics">
+                <div class="gs-metric">
+                    <i class="fas fa-thermometer-half" style="color:#ef4444"></i>
+                    <span class="gs-metric-value">${parseFloat(alert.temperature).toFixed(1)}°C</span>
+                    <span class="gs-metric-label">Temp</span>
+                </div>
+                <div class="gs-metric">
+                    <i class="fas fa-smog" style="color:#f59e0b"></i>
+                    <span class="gs-metric-value">${parseFloat(alert.smoke).toFixed(1)}</span>
+                    <span class="gs-metric-label">Smoke</span>
+                </div>
+                <div class="gs-metric">
+                    <i class="fas fa-tint" style="color:#3b82f6"></i>
+                    <span class="gs-metric-value">${parseFloat(alert.humidity).toFixed(1)}%</span>
+                    <span class="gs-metric-label">Humidity</span>
+                </div>
+            </div>
+            <div class="gs-alert-location">
+                <i class="fas fa-map-marker-alt"></i>
+                <span>${parseFloat(alert.latitude).toFixed(4)}, ${parseFloat(alert.longitude).toFixed(4)}</span>
+            </div>
+            <div class="gs-alert-actions">
+                <button class="gs-btn gs-btn-dismiss" onclick="clearAlert('${alert.id}')">
+                    <i class="fas fa-times"></i> Dismiss
+                </button>
+                <button class="gs-btn gs-btn-zoom" onclick='zoomToSensorFromAlert(${alert.latitude},${alert.longitude},"${alert.sensorId}",${JSON.stringify(alert).replace(/'/g, "\\'")})'>
+                    <i class="fas fa-crosshairs"></i> Locate
+                </button>
+                <button class="gs-btn gs-btn-ack" onclick="acknowledge('${alert.id}')">
+                    <i class="fas fa-check-double"></i> Acknowledge
+                </button>
+            </div>
+        </div>`;
     });
 
-    // تشغيل الصوت
-    const sound = document.getElementById("fire-sound");
-    if (sound) {
-        sound.play().catch(err => {
-            console.warn("Autoplay prevented:", err);
-        });
-    }
-}
+    container.innerHTML = `
+        <div class="gs-alert-panel">
+            <div class="gs-alert-panel-header">
+                <div class="gs-alert-icon-pulse"></div>
+                <h4><i class="fas fa-exclamation-triangle"></i> ${activeAlerts.length} Active Alert${activeAlerts.length > 1 ? 's' : ''}</h4>
+                <button class="gs-btn-close-all" onclick="clearAllAlerts()" title="Dismiss All">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="gs-alert-list">${alertsHtml}</div>
+        </div>
+    `;
 
+    document.body.appendChild(container);
+
+    // Play sound
+    const sound = document.getElementById("fire-sound");
+    if (sound) sound.play().catch(() => {});
+}
 
 function clearAlert(alertId) {
     const index = activeAlerts.findIndex(a => a.id === alertId);
-    if (index !== -1) {
-        activeAlerts.splice(index, 1);
-        renderAlerts();
-    }
+    if (index !== -1) activeAlerts.splice(index, 1);
+    renderAlerts();
+}
 
-    // إذا لم يتبقَ أي إنذار، أخفِ الوميض وأوقف الصوت
-    if (activeAlerts.length === 0) {
-        const overlay = document.getElementById("alert-overlay");
-        if (overlay) {
-            overlay.classList.remove("blink");
-            overlay.style.display = "none";
-        }
-
-        const sound = document.getElementById("fire-sound");
-        if (sound) {
-            sound.pause();
-            sound.currentTime = 0;
-        }
-    }
+function clearAllAlerts() {
+    activeAlerts.length = 0;
+    renderAlerts();
 }
 
 function acknowledge(alertId) {
@@ -123,14 +145,12 @@ function acknowledge(alertId) {
         .then(res => {
             if (res.ok) {
                 clearAlert(alertId);
-                showStackedToast("Fire alert acknowledged successfully!");
+                showToast("Alert acknowledged successfully!", "success");
             } else {
-                showStackedToast("Failed to acknowledge alert.", "fa-times-circle", "bg-danger");
+                showToast("Failed to acknowledge alert.", "error");
             }
         })
-        .catch(err => {
-            showStackedToast("Error acknowledging alert.", "fa-exclamation-circle", "bg-danger");
-        });
+        .catch(() => showToast("Network error.", "error"));
 }
 
 function zoomToSensorFromAlert(latitude, longitude, sensorId, alert) {
@@ -139,39 +159,29 @@ function zoomToSensorFromAlert(latitude, longitude, sensorId, alert) {
     window.location.href = `/Map/Index`;
 }
 
-function showStackedToast(message, iconClass = "fa-check-circle", bg = "bg-success") {
+function showToast(message, type) {
     const toastArea = document.getElementById("toastArea");
+    if (!toastArea) return;
 
-    const toastId = `toast-${Date.now()}`;
-    const toastHTML = `
-        <div id="${toastId}" class="toast text-white ${bg}" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="3000">
-            <div class="toast-header">
-                <i class="fas ${iconClass} me-2 text-${bg.includes("danger") ? "danger" : "success"}"></i>
-                <strong class="me-auto">Green Shield</strong>
-                <small class="text-muted">just now</small>
-                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-            </div>
-            <div class="toast-body">
-                ${message}
-            </div>
+    const id = `toast-${Date.now()}`;
+    const isError = type === "error";
+    const icon = isError ? "fa-exclamation-circle" : "fa-check-circle";
+    const bg = isError ? "#ef4444" : "#22c55e";
+
+    toastArea.insertAdjacentHTML("beforeend", `
+        <div id="${id}" class="gs-toast" style="border-left:4px solid ${bg}">
+            <i class="fas ${icon}" style="color:${bg};font-size:1.2rem;"></i>
+            <span>${message}</span>
+            <button onclick="this.parentElement.remove()" style="background:none;border:none;color:#9ca3af;cursor:pointer;font-size:1.1rem;">
+                <i class="fas fa-times"></i>
+            </button>
         </div>
-    `;
+    `);
 
-    toastArea.insertAdjacentHTML("beforeend", toastHTML);
-
-    const toastEl = document.getElementById(toastId);
-    const toast = new bootstrap.Toast(toastEl, {
-        delay: 3000,
-        autohide: true
-    });
-    toast.show();
-
-    // حذف التوست من DOM بعد اختفائه
-    toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
+    setTimeout(() => document.getElementById(id)?.remove(), 4000);
 }
 
-
-// إعادة عرض التنبيه المخزن عند التنقل بين الصفحات
+// Restore alert from session
 const alertJson = sessionStorage.getItem("pendingAlert");
 if (alertJson) {
     try {
@@ -180,11 +190,5 @@ if (alertJson) {
         activeAlerts.push(alert);
         renderAlerts();
         sessionStorage.removeItem("pendingAlert");
-    } catch (e) {
-        console.warn("Failed to parse stored alert:", e);
-    }
+    } catch (e) { console.warn("Failed to parse stored alert:", e); }
 }
-
-alertConnection.on("KeepAlive", (timestamp) => {
-    console.log("KeepAlive from server:", timestamp);
-});

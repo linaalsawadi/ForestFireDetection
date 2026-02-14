@@ -1,12 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ForestFireDetection.Data;
-using ForestFireDetection.Models;
-using Microsoft.AspNetCore.Authorization;
-using System.Linq;
+using ForestFireDetection.Models.Enums;
 using ForestFireDetection.Models.ViewModels;
-using ForestFireDetection.ViewModels;
 using ForestFireDetection.Models.DTOs;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ForestFireDetection.Controllers
 {
@@ -24,7 +22,6 @@ namespace ForestFireDetection.Controllers
         {
             var sensors = await _context.Sensors.ToListAsync();
 
-            // جلب آخر توقيت لكل SensorId
             var latestDataPerSensor = await _context.SensorData
                 .GroupBy(d => d.SensorId)
                 .Select(g => g.OrderByDescending(d => d.Timestamp).FirstOrDefault())
@@ -32,8 +29,7 @@ namespace ForestFireDetection.Controllers
 
             var sensorViewModels = sensors.Select(sensor =>
             {
-                var lastData = latestDataPerSensor.FirstOrDefault(d => d.SensorId == sensor.SensorId);
-
+                var lastData = latestDataPerSensor.FirstOrDefault(d => d != null && d.SensorId == sensor.SensorId);
                 return new SensorWithLastDataViewModel
                 {
                     Sensor = sensor,
@@ -81,11 +77,7 @@ namespace ForestFireDetection.Controllers
                 })
                 .ToListAsync();
 
-            var allData = data
-                .Concat(archive)
-                .OrderBy(d => d.Timestamp)
-                .ToList();
-
+            var allData = data.Concat(archive).OrderBy(d => d.Timestamp).ToList();
             return View(allData);
         }
 
@@ -93,55 +85,51 @@ namespace ForestFireDetection.Controllers
         [Authorize]
         public async Task<IActionResult> GetSensorData(string sensorId)
         {
-            var latest10 = await _context.SensorData
+            var latest = await _context.SensorData
                 .Where(d => d.SensorId == sensorId && d.Timestamp <= DateTime.UtcNow)
                 .OrderByDescending(d => d.Timestamp)
-                .Take(10)
+                .Take(15)
                 .ToListAsync();
 
-            var ordered = latest10
+            var ordered = latest
                 .OrderBy(d => d.Timestamp)
                 .Select(d => new
                 {
                     d.Timestamp,
                     d.Temperature,
                     d.Humidity,
-                    d.Smoke
+                    d.Smoke,
+                    d.FireScore
                 })
                 .ToList();
 
             return Json(ordered);
         }
 
-
         [HttpGet]
         [Authorize]
         public async Task<IActionResult> GetSensors()
         {
-            var sensors = await _context.Sensors.ToListAsync();
+            var sensorsWithLastData = await _context.Sensors
+                .GroupJoin(
+                    _context.SensorData
+                        .GroupBy(d => d.SensorId)
+                        .Select(g => g.OrderByDescending(d => d.Timestamp).FirstOrDefault()),
+                    s => s.SensorId,
+                    d => d!.SensorId,
+                    (s, dataGroup) => new { Sensor = s, LastData = dataGroup.FirstOrDefault() })
+                .ToListAsync();
 
-            var result = new List<SensorDto>();
-
-            foreach (var sensor in sensors)
+            var result = sensorsWithLastData.Select(x => new SensorDto
             {
-                var lastData = await _context.SensorData
-                    .Where(d => d.SensorId == sensor.SensorId)
-                    .OrderByDescending(d => d.Timestamp)
-                    .FirstOrDefaultAsync();
-
-                result.Add(new SensorDto
-                {
-                    SensorId = sensor.SensorId,
-                    SensorState = sensor.SensorState,
-                    SensorPositioningDate = sensor.SensorPositioningDate,
-                    SensorDangerSituation = sensor.SensorDangerSituation,
-                    FireScore = lastData?.FireScore
-                });
-            }
+                SensorId = x.Sensor.SensorId,
+                SensorState = x.Sensor.SensorState,
+                SensorPositioningDate = x.Sensor.SensorPositioningDate,
+                SensorDangerSituation = x.Sensor.SensorDangerSituation,
+                FireScore = x.LastData?.FireScore
+            }).ToList();
 
             return Json(result);
         }
-
-
     }
 }

@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.AspNetCore.SignalR;
 using ForestFireDetection.Hubs;
+using Microsoft.Extensions.Logging;
 
 namespace ForestFireDetection.Services
 {
@@ -12,15 +13,18 @@ namespace ForestFireDetection.Services
         private readonly IHubContext<AlertHub> _alertHub;
         private readonly IHubContext<ChartHub> _chartHub;
         private readonly IHubContext<MapHub> _mapHub;
+        private readonly ILogger<SignalRKeepAliveService> _logger;
 
         public SignalRKeepAliveService(
             IHubContext<AlertHub> alertHub,
             IHubContext<ChartHub> chartHub,
-            IHubContext<MapHub> mapHub)
+            IHubContext<MapHub> mapHub,
+            ILogger<SignalRKeepAliveService> logger)
         {
             _alertHub = alertHub;
             _chartHub = chartHub;
             _mapHub = mapHub;
+            _logger = logger;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -30,16 +34,16 @@ namespace ForestFireDetection.Services
                 try
                 {
                     var now = DateTime.UtcNow;
-
-                    await _alertHub.Clients.All.SendAsync("KeepAlive", now, cancellationToken: stoppingToken);
-                    await _chartHub.Clients.All.SendAsync("KeepAlive", now, cancellationToken: stoppingToken);
-                    await _mapHub.Clients.All.SendAsync("KeepAlive", now, cancellationToken: stoppingToken);
-
-                    Console.WriteLine($"[KeepAlive] Sent to all hubs at {now:HH:mm:ss}");
+                    await Task.WhenAll(
+                        _alertHub.Clients.All.SendAsync("KeepAlive", now, stoppingToken),
+                        _chartHub.Clients.All.SendAsync("KeepAlive", now, stoppingToken),
+                        _mapHub.Clients.All.SendAsync("KeepAlive", now, stoppingToken)
+                    );
+                    _logger.LogDebug("KeepAlive sent at {Time:HH:mm:ss}", now);
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"[KeepAlive] Error: {ex.Message}");
+                    _logger.LogError(ex, "KeepAlive error");
                 }
 
                 await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);

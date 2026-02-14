@@ -1,6 +1,6 @@
-﻿namespace ForestFireDetection.Data
+namespace ForestFireDetection.Models.Enums
 {
-    public class UserRoles
+    public static class UserRoles
     {
         public const string Admin = "admin";
         public const string User = "user";

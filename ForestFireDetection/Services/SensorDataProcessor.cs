@@ -1,4 +1,5 @@
-﻿using ForestFireDetection.Data;
+﻿using System.Collections.Concurrent;
+using ForestFireDetection.Data;
 using ForestFireDetection.Models;
 using ForestFireDetection.Hubs;
 using Microsoft.AspNetCore.SignalR;
@@ -12,40 +13,40 @@ namespace ForestFireDetection.Services
         private readonly IHubContext<AlertHub> _alertHub;
         private readonly IHubContext<MapHub> _mapHub;
         private readonly IHubContext<ChartHub> _chartHub;
+        private readonly FuzzyEngine _fuzzyEngine;
 
-        private static readonly Dictionary<string, List<SensorData>> _buffer = new();
-        private static readonly Dictionary<string, DateTime> _lastAlertTimes = new();
-        private static readonly Dictionary<string, DateTime> _fireStartTimes = new();
+        private static readonly ConcurrentDictionary<string, List<SensorData>> _buffer = new();
+        private static readonly ConcurrentDictionary<string, DateTime> _lastAlertTimes = new();
+        private static readonly ConcurrentDictionary<string, DateTime> _fireStartTimes = new();
 
-        private const int BATCH_SIZE = 4;
-        private const int ALERT_REPEAT_MINUTES = 5;
+        private const int BatchSize = 4;
+        private const int AlertRepeatMinutes = 5;
 
         public SensorDataProcessor(
             ForestFireDetectionDbContext context,
             IHubContext<AlertHub> alertHub,
             IHubContext<MapHub> mapHub,
-            IHubContext<ChartHub> chartHub)
+            IHubContext<ChartHub> chartHub,
+            FuzzyEngine fuzzyEngine)
         {
             _context = context;
             _alertHub = alertHub;
             _mapHub = mapHub;
             _chartHub = chartHub;
+            _fuzzyEngine = fuzzyEngine;
         }
 
         public async Task ProcessAsync(SensorData data)
         {
-            // FireScore
-           var fuzzy = new FuzzyEngine();
-            data.FireScore = Math.Clamp(fuzzy.ComputeFireScore(data.Temperature, data.Humidity, data.Smoke), 0, 100);
+            data.FireScore = Math.Clamp(
+                _fuzzyEngine.ComputeFireScore(data.Temperature, data.Humidity, data.Smoke), 0, 100);
 
-
-            string state;
-            if (data.FireScore >= 75)
-                state = "red";
-            else if (data.FireScore >= 50)
-                state = "yellow";
-            else
-                state = "green";
+            string state = data.FireScore switch
+            {
+                >= 75 => "red",
+                >= 50 => "yellow",
+                _ => "green"
+            };
 
             var sensor = await _context.Sensors.FindAsync(data.SensorId);
             if (sensor == null)
@@ -55,19 +56,17 @@ namespace ForestFireDetection.Services
                     SensorId = data.SensorId,
                     SensorPositioningDate = DateTime.UtcNow,
                     SensorState = state,
-                    SensorDangerSituation = (state != "green")
+                    SensorDangerSituation = state != "green"
                 };
                 _context.Sensors.Add(sensor);
             }
             else
             {
                 sensor.SensorState = state;
-                sensor.SensorDangerSituation = (state != "green");
+                sensor.SensorDangerSituation = state != "green";
                 sensor.SensorPositioningDate = DateTime.UtcNow;
-                _context.Sensors.Update(sensor);
             }
 
-            // تحديث الخريطة
             await _mapHub.Clients.All.SendAsync("UpdateSensor", new
             {
                 sensorId = data.SensorId,
@@ -80,11 +79,10 @@ namespace ForestFireDetection.Services
                 sensorState = state,
             });
 
-            // تحديث العدادات
             var greenCount = await _context.Sensors.CountAsync(s => s.SensorState == "green");
             var yellowCount = await _context.Sensors.CountAsync(s => s.SensorState == "yellow");
             var redCount = await _context.Sensors.CountAsync(s => s.SensorState == "red");
-            var offlineCount =await _context.Sensors.CountAsync(s => s.SensorState == "offline");
+            var offlineCount = await _context.Sensors.CountAsync(s => s.SensorState == "offline");
 
             await _chartHub.Clients.All.SendAsync("ReceiveSensorData", data.SensorId, new
             {
@@ -93,20 +91,26 @@ namespace ForestFireDetection.Services
                 humidity = data.Humidity,
                 smoke = data.Smoke,
                 fireScore = data.FireScore,
-            }, state, sensor.SensorDangerSituation, greenCount, yellowCount, redCount, offlineCount, sensor.SensorPositioningDate);
+            }, state, sensor.SensorDangerSituation,
+               greenCount, yellowCount, redCount, offlineCount,
+               sensor.SensorPositioningDate);
 
+            // Buffer data for batch averaging
+            var buffer = _buffer.GetOrAdd(data.SensorId, _ => new List<SensorData>());
+            lock (buffer)
+            {
+                buffer.Add(data);
+                if (buffer.Count < BatchSize)
+                    return;
+            }
 
-            // تجميع البيانات
-            if (!_buffer.ContainsKey(data.SensorId))
-                _buffer[data.SensorId] = new List<SensorData>();
+            List<SensorData> batch;
+            lock (buffer)
+            {
+                batch = new List<SensorData>(buffer);
+                buffer.Clear();
+            }
 
-            _buffer[data.SensorId].Add(data);
-
-            if (_buffer[data.SensorId].Count < BATCH_SIZE)
-                return;
-
-            // حساب المتوسط
-            var batch = _buffer[data.SensorId];
             var avgData = new SensorData
             {
                 Id = Guid.NewGuid(),
@@ -120,26 +124,19 @@ namespace ForestFireDetection.Services
                 FireScore = Math.Round(data.FireScore, 2)
             };
 
-            _buffer[data.SensorId].Clear();
-
             _context.SensorData.Add(avgData);
             await _context.SaveChangesAsync();
 
+            if (!await IsRealFireAsync(avgData))
+                return;
 
-            // تحقق من وجود حريق فعلي
-            bool isRealFire = await IsRealFireAsync(avgData);
-            if (!isRealFire) return;
-
-            // إعادة الإنذار إذا استمر الخطر
-            bool shouldSendAlert = !_lastAlertTimes.ContainsKey(avgData.SensorId) ||
-                                   (DateTime.UtcNow - _lastAlertTimes[avgData.SensorId]).TotalMinutes >= ALERT_REPEAT_MINUTES;
+            var now = DateTime.UtcNow;
+            bool shouldSendAlert = !_lastAlertTimes.TryGetValue(avgData.SensorId, out var lastAlert) ||
+                                   (now - lastAlert).TotalMinutes >= AlertRepeatMinutes;
 
             if (!shouldSendAlert) return;
-            _lastAlertTimes[avgData.SensorId] = DateTime.UtcNow;
-
-            // حساب مدة استمرار الخطر
-            if (!_fireStartTimes.ContainsKey(avgData.SensorId))
-                _fireStartTimes[avgData.SensorId] = DateTime.UtcNow;
+            _lastAlertTimes[avgData.SensorId] = now;
+            _fireStartTimes.TryAdd(avgData.SensorId, now);
 
             var alert = new Alert
             {
@@ -148,7 +145,7 @@ namespace ForestFireDetection.Services
                 Temperature = avgData.Temperature,
                 Smoke = avgData.Smoke,
                 Humidity = avgData.Humidity,
-                Timestamp = DateTime.UtcNow,
+                Timestamp = now,
                 Latitude = avgData.Latitude,
                 Longitude = avgData.Longitude,
                 Status = "NotReviewed",
@@ -160,7 +157,6 @@ namespace ForestFireDetection.Services
 
             var notReviewedCount = await _context.Alerts.CountAsync(a => a.Status == "NotReviewed");
             await _alertHub.Clients.All.SendAsync("UpdateAlertCount", notReviewedCount);
-
             await _alertHub.Clients.All.SendAsync("NewAlert", new
             {
                 alert.Id,
@@ -171,10 +167,9 @@ namespace ForestFireDetection.Services
                 alert.Timestamp,
                 alert.Latitude,
                 alert.Longitude,
-                Status = alert.Status,
+                alert.Status,
                 FireScore = Math.Round(alert.FireScore, 2),
             });
-
         }
 
         private async Task<bool> IsRealFireAsync(SensorData data)
@@ -187,24 +182,16 @@ namespace ForestFireDetection.Services
 
             if (lastReadings.Count < 2) return false;
 
-            var lastTemp = lastReadings[1].Temperature;
-            var tempRise = data.Temperature - lastTemp;
+            var tempRise = data.Temperature - lastReadings[1].Temperature;
 
-            bool strongSmoke = data.Smoke >= 15;
-            bool highTemp = data.Temperature >= 50;
-            bool lowHumidity = data.Humidity <= 25;
-            bool fastTempRise = tempRise >= 5;
-
-            if (strongSmoke)
-                return true;
+            if (data.Smoke >= 15) return true;
 
             int score = 0;
-            if (highTemp) score++;
-            if (lowHumidity) score++;
-            if (fastTempRise) score++;
+            if (data.Temperature >= 50) score++;
+            if (data.Humidity <= 25) score++;
+            if (tempRise >= 5) score++;
 
             return score >= 2;
-
         }
     }
 }

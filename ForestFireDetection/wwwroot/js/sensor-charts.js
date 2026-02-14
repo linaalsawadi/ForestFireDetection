@@ -1,75 +1,174 @@
-﻿// تحديث المخططات والصفوف والعدادات بالـ SignalR
+﻿// ═══════════════════════════════════════════
+// GREEN SHIELD — Sensors Page Charts + SignalR
+// ═══════════════════════════════════════════
+
 const charts = {};
 let expandedSensorIds = new Set();
+const MAX_CHART_POINTS = 15;
 
 function loadSensorCharts(sensorId, container) {
     fetch(`/Sensors/GetSensorData?sensorId=${sensorId}`)
         .then(res => res.json())
         .then(data => {
+            // Take only the last MAX_CHART_POINTS entries
+            const sliced = data.slice(-MAX_CHART_POINTS);
+            const labels = sliced.map(d => formatTime(d.timestamp));
+
             container.innerHTML = `
-                <div class="row">
+                <div class="row g-3">
                     <div class="col-md-4">
-                        <canvas id="tempChart-${sensorId}" height="200"></canvas>
+                        <div class="gs-panel-chart-container gs-chart-light">
+                            <div class="gs-panel-chart-label">
+                                <i class="fas fa-thermometer-half" style="color:var(--gs-red)"></i> Temperature (°C)
+                            </div>
+                            <div class="gs-chart-wrapper"><canvas id="tempChart-${sensorId}"></canvas></div>
+                        </div>
                     </div>
                     <div class="col-md-4">
-                        <canvas id="humidityChart-${sensorId}" height="200"></canvas>
+                        <div class="gs-panel-chart-container gs-chart-light">
+                            <div class="gs-panel-chart-label">
+                                <i class="fas fa-tint" style="color:var(--gs-blue)"></i> Humidity (%)
+                            </div>
+                            <div class="gs-chart-wrapper"><canvas id="humidityChart-${sensorId}"></canvas></div>
+                        </div>
                     </div>
                     <div class="col-md-4">
-                        <canvas id="smokeChart-${sensorId}" height="200"></canvas>
+                        <div class="gs-panel-chart-container gs-chart-light">
+                            <div class="gs-panel-chart-label">
+                                <i class="fas fa-smog" style="color:var(--gs-yellow)"></i> Smoke
+                            </div>
+                            <div class="gs-chart-wrapper"><canvas id="smokeChart-${sensorId}"></canvas></div>
+                        </div>
                     </div>
-                </div>
-            `;
-            drawAllCharts(sensorId, data);
+                </div>`;
+
+            renderSChart(`tempChart-${sensorId}`, labels, sliced.map(d => d.temperature), "#ef4444", "rgba(239,68,68,.08)");
+            renderSChart(`humidityChart-${sensorId}`, labels, sliced.map(d => d.humidity), "#3b82f6", "rgba(59,130,246,.08)");
+            renderSChart(`smokeChart-${sensorId}`, labels, sliced.map(d => d.smoke), "#f59e0b", "rgba(245,158,11,.08)");
         })
-        .catch(err => {
-            console.error("Chart error:", err);
-            container.innerHTML = `<p class="text-danger">Failed to load chart data.</p>`;
+        .catch(() => {
+            container.innerHTML = `<p style="color:var(--gs-red);text-align:center;padding:20px;">Failed to load data.</p>`;
         });
 }
 
-function drawAllCharts(sensorId, data) {
-    renderLineChart(`tempChart-${sensorId}`, "Temperature (°C)", data.map(d => ({ timestamp: d.timestamp, value: d.temperature })), "rgba(255, 99, 132, 1)");
-    renderLineChart(`humidityChart-${sensorId}`, "Humidity (%)", data.map(d => ({ timestamp: d.timestamp, value: d.humidity })), "rgba(54, 162, 235, 1)");
-    renderLineChart(`smokeChart-${sensorId}`, "Smoke", data.map(d => ({ timestamp: d.timestamp, value: d.smoke })), "rgba(255, 206, 86, 1)");
+function formatTime(ts) {
+    const d = new Date(ts);
+    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 }
 
-function renderLineChart(canvasId, label, data, color) {
+function renderSChart(canvasId, labels, data, color, bg) {
     const ctx = document.getElementById(canvasId)?.getContext('2d');
     if (!ctx) return;
-
-    if (charts[canvasId] && typeof charts[canvasId].destroy === "function") {
-        charts[canvasId].destroy();
-    }
+    if (charts[canvasId]) charts[canvasId].destroy();
 
     charts[canvasId] = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: data.map(d => new Date(d.timestamp).toLocaleTimeString()),
+            labels: labels,
             datasets: [{
-                label: label,
-                data: data.map(d => d.value),
+                data: data,
                 borderColor: color,
-                backgroundColor: color.replace("1)", "0.1)"),
+                backgroundColor: bg,
                 fill: true,
-                tension: 0.3,
-                pointRadius: 2
+                tension: 0.4,
+                borderWidth: 2,
+                pointRadius: 3,
+                pointHoverRadius: 5,
+                pointBackgroundColor: '#fff',
+                pointBorderColor: color,
+                pointBorderWidth: 2
             }]
         },
         options: {
             responsive: true,
+            maintainAspectRatio: false,
+            animation: { duration: 400 },
             plugins: {
-                legend: { display: true, position: 'top' }
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: '#111827',
+                    titleFont: { size: 11, weight: '600' },
+                    bodyFont: { size: 11 },
+                    cornerRadius: 8,
+                    padding: 8,
+                    displayColors: false
+                }
             },
             scales: {
+                x: {
+                    ticks: {
+                        maxTicksLimit: 5,
+                        maxRotation: 0,
+                        autoSkip: true,
+                        font: { size: 10 },
+                        color: '#9ca3af'
+                    },
+                    grid: { display: false }
+                },
                 y: {
                     beginAtZero: true,
-                    suggestedMax: Math.max(...data.map(d => d.value)) + 20 
+                    ticks: {
+                        maxTicksLimit: 5,
+                        font: { size: 10 },
+                        color: '#9ca3af'
+                    },
+                    grid: { color: '#f3f4f6' }
                 }
             }
         }
     });
 }
 
+// ── Trim chart to MAX_CHART_POINTS ──
+function pushToSensorChart(chartId, label, value) {
+    const chart = charts[chartId];
+    if (!chart) return;
+
+    chart.data.labels.push(label);
+    chart.data.datasets[0].data.push(value);
+
+    // Always keep only the last MAX_CHART_POINTS
+    while (chart.data.labels.length > MAX_CHART_POINTS) {
+        chart.data.labels.shift();
+        chart.data.datasets[0].data.shift();
+    }
+
+    chart.update('none');
+}
+
+// ── Toggle expand/collapse ──
+function attachExpandableEvents() {
+    document.querySelectorAll('.sensor-row').forEach(row => {
+        const newRow = row.cloneNode(true);
+        row.parentNode.replaceChild(newRow, row);
+
+        newRow.addEventListener('click', function () {
+            const sid = this.getAttribute('data-sensor-id');
+            const cr = document.querySelector(`.sensor-charts-row[data-sensor-id="${sid}"]`);
+            if (!cr) return;
+
+            const chevron = this.querySelector('.fa-chevron-down, .fa-chevron-up');
+
+            if (cr.classList.contains('d-none')) {
+                cr.classList.remove('d-none');
+                expandedSensorIds.add(sid);
+                if (chevron) { chevron.classList.remove('fa-chevron-down'); chevron.classList.add('fa-chevron-up'); }
+
+                const c = cr.querySelector(`#charts-container-${sid}`);
+                if (c && !c.dataset.loaded) {
+                    loadSensorCharts(sid, c);
+                    c.dataset.loaded = "true";
+                }
+            } else {
+                cr.classList.add('d-none');
+                expandedSensorIds.delete(sid);
+                if (chevron) { chevron.classList.remove('fa-chevron-up'); chevron.classList.add('fa-chevron-down'); }
+            }
+        });
+    });
+}
+
+// ═══ SignalR ═══
 const chartHubConnection = new signalR.HubConnectionBuilder()
     .withUrl("/chartHub")
     .withAutomaticReconnect()
@@ -79,164 +178,76 @@ const chartHubConnection = new signalR.HubConnectionBuilder()
 chartHubConnection.serverTimeoutInMilliseconds = 10 * 60 * 1000;
 chartHubConnection.keepAliveIntervalInMilliseconds = 30 * 1000;
 
-chartHubConnection.on("ReceiveSensorData", function (sensorId, latestPoint, state, danger, totalGreen, totalYellow, totalRed, totalOffline, positioningData) {
-    // تحديث العدادات
-    document.getElementById("count-green").textContent = totalGreen;
-    document.getElementById("count-yellow").textContent = totalYellow;
-    document.getElementById("count-red").textContent = totalRed;
-    document.getElementById("count-offline").textContent = totalOffline;
+chartHubConnection.on("ReceiveSensorData", function (sensorId, lp, state, danger, tG, tY, tR, tO, pd) {
+    // ── Update counters ──
+    const counters = { "count-green": tG, "count-yellow": tY, "count-red": tR, "count-offline": tO };
+    Object.entries(counters).forEach(([id, val]) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = val;
+    });
 
-    const row = Array.from(document.querySelectorAll("#sensorTable tbody tr"))
-        .find(tr => tr.children[0]?.textContent?.trim() === sensorId);
-
+    // ── Update table row ──
+    const row = document.querySelector(`.sensor-row[data-sensor-id="${sensorId}"]`);
     if (row) {
-        const statusCell = row.children[1];
-        const fireScoreCell = row.children[2];
-        const positioningDataCell = row.children[3];
-        const dangerCell = row.children[4];
+        const cells = row.children;
 
-        statusCell.innerHTML =
-            state === "offline" ? '<span class="badge bg-secondary rounded-pill">Offline</span>' :
-            state === "red" ? '<span class="badge bg-danger rounded-pill">Critical</span>' :
-            state === "yellow" ? '<span class="badge bg-warning text-dark  rounded-pill">Warning</span>' :
-                        '<span class="badge bg-success rounded-pill">Normal</span>';
+        // Status badge
+        const states = {
+            offline: ['bg-secondary', 'Offline'],
+            red: ['bg-danger', 'Critical'],
+            yellow: ['bg-warning text-dark', 'Warning'],
+            green: ['bg-success', 'Normal']
+        };
+        const [cls, label] = states[state] || states.green;
+        cells[1].innerHTML = `<span class="badge ${cls} rounded-pill">${label}</span>`;
 
-        const score = latestPoint.fireScore;
-        if (score !== null && score !== undefined) {
-            const rounded = score.toFixed(2);
-            if (score >= 75) fireScoreCell.innerHTML = `<span class="fw-bold text-danger">${rounded}</span>`;
-            else if (score >= 50) fireScoreCell.innerHTML = `<span class="fw-bold text-warning">${rounded}</span>`;
-            else fireScoreCell.innerHTML = `<span class="fw-bold text-success">${rounded}</span>`;
-        } else {
-            fireScoreCell.innerHTML = '<span class="text-muted">N/A</span>';
+        // Sensor dot color
+        const dot = cells[0].querySelector('.gs-sensor-dot');
+        if (dot) dot.className = `gs-sensor-dot gs-dot-${state}`;
+
+        // Fire score
+        const s = lp.fireScore;
+        if (s != null) {
+            const c = s >= 75 ? 'var(--gs-red)' : s >= 50 ? 'var(--gs-yellow)' : 'var(--gs-green)';
+            cells[2].innerHTML = `<span class="fw-bold" style="color:${c}">${s.toFixed(1)}%</span>`;
         }
 
-        positioningDataCell.textContent = new Date(positioningData).toLocaleString();
-        dangerCell.textContent = danger ? "Yes" : "No";
+        // Last update
+        cells[3].innerHTML = `<small class="text-muted">${new Date(pd).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</small>`;
+
+        // Danger
+        cells[4].innerHTML = danger
+            ? `<span style="color:var(--gs-red);font-weight:600;"><i class="fas fa-exclamation-circle me-1"></i>Yes</span>`
+            : `<span class="text-muted">No</span>`;
     }
 
+    // ── Update live charts if expanded ──
     if (!expandedSensorIds.has(sensorId)) return;
 
-    const chartTypes = ["temp", "humidity", "smoke"];
-    const values = {
-        temp: latestPoint.temperature,
-        humidity: latestPoint.humidity,
-        smoke: latestPoint.smoke
-    };
+    const time = formatTime(lp.timestamp);
 
-    chartTypes.forEach(type => {
-        const chartId = `${type}Chart-${sensorId}`;
-        const chart = charts[chartId];
-        if (chart) {
-            const label = new Date(latestPoint.timestamp).toLocaleTimeString();
-            chart.data.labels.push(label);
-            chart.data.datasets[0].data.push(values[type]);
-
-            if (chart.data.labels.length > 10) {
-                chart.data.labels.shift();
-                chart.data.datasets[0].data.shift();
-            }
-
-            chart.update();
-        }
-    });
+    pushToSensorChart(`tempChart-${sensorId}`, time, lp.temperature);
+    pushToSensorChart(`humidityChart-${sensorId}`, time, lp.humidity);
+    pushToSensorChart(`smokeChart-${sensorId}`, time, lp.smoke);
 });
+
+chartHubConnection.on("KeepAlive", () => { });
 
 chartHubConnection.start()
-    .then(() => console.log("Connected to chartHub"))
-    .catch(err => console.error("chartHub connection failed:", err));
+    .then(() => console.log("chartHub connected"))
+    .catch(err => console.error("chartHub error:", err));
 
-function attachExpandableEvents() {
-    document.querySelectorAll('tr[data-widget="expandable-table"]').forEach(row => {
-        row.addEventListener('click', () => {
-            const nextRow = row.nextElementSibling;
-            const container = nextRow.querySelector('[id^="charts-container-"]');
-            const sensorId = container?.id.replace("charts-container-", "");
-            if (sensorId && !container.dataset.loaded) {
-                loadSensorCharts(sensorId, container);
-                container.dataset.loaded = "true";
-            }
-            expandedSensorIds.add(sensorId);
-        });
+// ── Search ──
+document.getElementById("sensorSearch")?.addEventListener("keyup", function () {
+    const v = this.value.toLowerCase();
+    document.querySelectorAll('.sensor-row').forEach(r => {
+        const match = r.textContent.toLowerCase().includes(v);
+        r.style.display = match ? "" : "none";
+        const sid = r.getAttribute('data-sensor-id');
+        const cr = document.querySelector(`.sensor-charts-row[data-sensor-id="${sid}"]`);
+        if (cr && !match) cr.classList.add('d-none');
     });
-}
-
-refreshDashboard();
-
-function refreshDashboard() {
-    fetch('/Sensors/GetSensors')
-        .then(res => res.json())
-        .then(sensors => {
-            const tbody = document.querySelector("#sensorTable tbody");
-            expandedSensorIds = new Set();
-
-            document.querySelectorAll('tr[aria-expanded="true"]').forEach(row => {
-                const sensorId = row.children[0]?.textContent?.trim();
-                if (sensorId) expandedSensorIds.add(sensorId);
-            });
-
-            tbody.innerHTML = '';
-
-            sensors.forEach(sensor => {
-                const isOpen = expandedSensorIds.has(sensor.sensorId);
-                const fireScore = sensor.fireScore;
-                let fireScoreHtml = '<span class="text-muted">N/A</span>';
-
-                if (fireScore !== null && fireScore !== undefined) {
-                    const scoreValue = fireScore.toFixed(2);
-                    if (fireScore >= 75) fireScoreHtml = `<span class="fw-bold text-danger">${scoreValue}</span>`;
-                    else if (fireScore >= 50) fireScoreHtml = `<span class="fw-bold text-warning">${scoreValue}</span>`;
-                    else fireScoreHtml = `<span class="fw-bold text-success">${scoreValue}</span>`;
-                }
-
-                const row = document.createElement("tr");
-                row.setAttribute("data-widget", "expandable-table");
-                row.setAttribute("aria-expanded", isOpen ? "true" : "false");
-
-                row.innerHTML = `
-                    <td>${sensor.sensorId}</td>
-                    <td>
-                        ${sensor.sensorState === "offline" ? '<span class="badge bg-secondary rounded-pill">Offline</span>' :
-                        sensor.sensorState === "red" ? '<span class="badge bg-danger rounded-pill">Critical</span>' :
-                        sensor.sensorState === "yellow" ? '<span class="badge bg-warning text-dark rounded-pill">Warning</span>' :
-                            '<span class="badge bg-success rounded-pill">Normal</span>'}
-                    </td>
-                    <td>${fireScoreHtml}</td>
-                    <td>${new Date(sensor.sensorPositioningDate).toLocaleString()}</td>
-                    <td>${sensor.sensorDangerSituation ? "Yes" : "No"}</td>
-                `;
-
-                const expandable = document.createElement("tr");
-                expandable.className = isOpen ? "expandable-body" : "expandable-body d-none";
-                expandable.innerHTML = `
-                    <td colspan="5">
-                        <div id="charts-container-${sensor.sensorId}" class="p-2 bg-light rounded shadow-sm">
-                            <div class="text-center py-3">
-                                <div class="spinner-border text-primary" role="status">
-                                    <span class="visually-hidden">Loading...</span>
-                                </div>
-                                <p class="text-muted mt-2">Loading sensor data...</p>
-                            </div>
-                        </div>
-                    </td>
-                `;
-
-                tbody.appendChild(row);
-                tbody.appendChild(expandable);
-
-                if (isOpen) {
-                    const container = expandable.querySelector('[id^="charts-container-"]');
-                    if (container) {
-                        loadSensorCharts(sensor.sensorId, container);
-                        container.dataset.loaded = "true";
-                    }
-                }
-            });
-
-            attachExpandableEvents();
-        });
-}
-
-chartHubConnection.on("KeepAlive", (timestamp) => {
-    console.log("KeepAlive from server:", timestamp);
 });
+
+// ── Init ──
+document.addEventListener('DOMContentLoaded', attachExpandableEvents);

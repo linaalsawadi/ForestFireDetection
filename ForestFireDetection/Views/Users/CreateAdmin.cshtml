@@ -1,5 +1,5 @@
-﻿@using ForestFireDetection.Data;
-@model ForestFireDetection.ViewModels.RegisterViewModel;
+﻿@using ForestFireDetection.Models.Enums;
+@model ForestFireDetection.Models.ViewModels.RegisterViewModel;
 
 @{
 	ViewData["Title"] = "Create Admin";
@@ -40,7 +40,7 @@
 					<button type="submit" class="btn btn-black btn-outline-primary" style="width:150px">Create</button>
 
 					<a asp-controller="Users" asp-action="ListAdmin" class="btn btn-secondary" style="width:150px">
-						Backto List
+						Back to List
 					</a>
 				</form>
 			</div>
@@ -52,8 +52,4 @@
 	@{
 		await Html.RenderPartialAsync("_ValidationScriptsPartial");
 	}
-}@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
 }

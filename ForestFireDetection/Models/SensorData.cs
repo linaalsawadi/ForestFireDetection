@@ -9,9 +9,10 @@ namespace ForestFireDetection.Models
         [Key]
         public Guid Id { get; set; }
 
+        [Required]
         [ForeignKey("Sensor")]
         [JsonPropertyName("sensorId")]
-        public string SensorId { get; set; }
+        public string SensorId { get; set; } = string.Empty;
 
         [JsonPropertyName("latitude")]
         public double Latitude { get; set; }
@@ -27,9 +28,11 @@ namespace ForestFireDetection.Models
 
         [JsonPropertyName("smoke")]
         public float Smoke { get; set; }
+
         public double FireScore { get; set; }
+
         public DateTime Timestamp { get; set; }
 
-        public Sensor Sensor { get; set; }
+        public Sensor Sensor { get; set; } = null!;
     }
 }

@@ -1,77 +1,28 @@
-﻿@model List<ForestFireDetection.ViewModels.SensorWithLatestDataViewModel>
-
-@{
+﻿@{
     ViewData["Title"] = "Map";
 }
 
 <div class="row">
-    <div class="col-md-12 mt-3">
+    <div class="col-12">
         <div class="card card-success card-outline">
-            <div class="card-header">
-                <h3 class="card-title"><i class="fas fa-map"></i> Map</h3>
-            </div>
-
-            
-
-            <div class="card-body">
-                <!-- حقل البحث -->
-                <div class="form-group" style="max-width: 250px;">
-                    <div class="input-group">
-                        <input type="search" id="sensorSearchInput" class="form-control form-control-m" placeholder="Enter Sensor ID" aria-label="Search">
-                        <div class="input-group-append">
-                            <button id="searchSensorBtn" type="submit" class="btn btn-m btn-default">
-                                <i class="fa fa-search"></i>
-                            </button>
-                        </div>
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3 class="card-title mb-0"><i class="fas fa-map-marked-alt me-2"></i>Live Map</h3>
+                <div style="max-width:220px;">
+                    <div class="input-group input-group-sm">
+                        <input type="text" class="form-control" id="sensorSearch" placeholder="Sensor ID (e.g. SNS-001)">
+                        <button class="btn btn-outline-secondary" type="button" onclick="document.getElementById('sensorSearch').dispatchEvent(new Event('keyup'))">
+                            <i class="fas fa-search"></i>
+                        </button>
                     </div>
                 </div>
-                <!-- الخريطة -->
-                <div id="map" style="height: 500px;"></div>
+            </div>
+            <div class="card-body p-0">
+                <div id="map" style="height:calc(100vh - 220px);min-height:500px;border-radius:0 0 12px 12px;"></div>
             </div>
         </div>
     </div>
 </div>
 
 @section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
     <script src="~/js/map.js"></script>
-    <script src="~/js/sensor-charts.js"></script>
-
-    <script>
-        window.addEventListener('load', function () {
-        @foreach (var sensor in Model)
-        {
-            <text>
-                    updateSensorOnMap({
-                        sensorId: "@sensor.SensorId",
-                        latitude: @sensor.Latitude,
-                        longitude: @sensor.Longitude,
-                        temperature: @sensor.Temperature,
-                        humidity: @sensor.Humidity,
-                        smoke: @sensor.Smoke,
-                        timestamp: "@sensor.Timestamp.ToString("o")",
-                        sensorState: "@sensor.SensorState"
-                    });
-            </text>
-        }
-                });
-
-        document.getElementById("searchSensorBtn").addEventListener("click", () => {
-            const input = document.getElementById("sensorSearchInput").value.trim();
-            if (!input) return;
-
-            const marker = window.sensorMarkers?.[input];
-            if (!marker) {
-                alert("Sensor not found on map.");
-                return;
-            }
-
-            const latLng = marker.getLatLng();
-            if (window.map) {
-                window.map.setView(latLng, 15);
-                showSensorPanel(input);
-            }
-        });
-    </script>
 }

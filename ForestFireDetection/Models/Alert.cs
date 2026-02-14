@@ -11,14 +11,13 @@ namespace ForestFireDetection.Models
         [Required]
         public Guid Id { get; set; }
 
-        // Foreign Key for Sensor
         [Required]
         [ForeignKey(nameof(Sensor))]
         [JsonPropertyName("sensorId")]
-        public string SensorId { get; set; }
+        public string SensorId { get; set; } = string.Empty;
 
         [Required]
-        [Range(-50, 100)] // درجة حرارة منطقية
+        [Range(-50, 100)]
         public float Temperature { get; set; }
 
         [Required]
@@ -38,7 +37,7 @@ namespace ForestFireDetection.Models
 
         [Required]
         [MaxLength(20)]
-        public string Status { get; set; } // NotReviewed | InReview | Resolved
+        public string Status { get; set; } = "NotReviewed";
 
         [MaxLength(100)]
         public string? ReviewedBy { get; set; }
@@ -54,7 +53,6 @@ namespace ForestFireDetection.Models
         [Required]
         public double Longitude { get; set; }
 
-        // Navigation Property
-        public Sensor Sensor { get; set; }
+        public Sensor Sensor { get; set; } = null!;
     }
 }

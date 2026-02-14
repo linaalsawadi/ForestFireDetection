@@ -1,160 +1,203 @@
 ﻿@model IEnumerable<ForestFireDetection.Models.Alert>
 @{
-    ViewData["Title"] = "Alerts List";
+    ViewData["Title"] = "Alerts";
 }
 
-<div class="row">
-    <div class="col-md-12 mt-3">
-        <div class="card card-success card-outline">
-            <div class="card-header">
-                <h3 class="card-title"><i class="fas fa-fire-alt"></i> Alerts List</h3>
+@{
+    var pending = Model.Count(a => a.Status == "NotReviewed"); var inReview = Model.Count(a => a.Status == "InReview"); var resolved = Model.Count(a => a.Status == "Resolved");
+}
+
+<!-- Summary -->
+<div class="row g-3 mb-3">
+    <div class="col-md-4">
+        <div class="gs-mini-stat">
+            <div class="gs-mini-stat-icon" style="background:rgba(245,158,11,.1);color:var(--gs-yellow);"><i class="fas fa-clock"></i></div>
+            <div><span class="gs-mini-stat-value">@pending</span><span class="gs-mini-stat-label">Pending</span></div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="gs-mini-stat">
+            <div class="gs-mini-stat-icon" style="background:rgba(59,130,246,.1);color:var(--gs-blue);"><i class="fas fa-search"></i></div>
+            <div><span class="gs-mini-stat-value">@inReview</span><span class="gs-mini-stat-label">In Review</span></div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="gs-mini-stat">
+            <div class="gs-mini-stat-icon" style="background:rgba(34,197,94,.1);color:var(--gs-green);"><i class="fas fa-check-double"></i></div>
+            <div><span class="gs-mini-stat-value">@resolved</span><span class="gs-mini-stat-label">Resolved</span></div>
+        </div>
+    </div>
+</div>
+
+<!-- Alerts Table -->
+<div class="card card-success card-outline">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h3 class="card-title mb-0"><i class="fas fa-fire-alt me-2"></i>Alerts List</h3>
+        <div style="max-width:220px;">
+            <div class="input-group input-group-sm">
+                <span class="input-group-text"><i class="fas fa-search text-muted"></i></span>
+                <input type="text" class="form-control" id="alertSearch" placeholder="Search alerts...">
             </div>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" id="alertTable">
+                <thead>
+                    <tr>
+                        <th>Sensor</th>
+                        <th>Temp</th>
+                        <th>Smoke</th>
+                        <th>Humidity</th>
+                        <th>Fire Score</th>
+                        <th>Time</th>
+                        <th>Status</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var alert in Model)
+                    {
+                        var sc = alert.FireScore;
+                        var scColor = sc >= 75 ? "var(--gs-red)" : sc >= 50 ? "var(--gs-yellow)" : "var(--gs-green)";
 
-            <div class="card-body">
-                <div class="row">
-                    <div class="form-group ms-auto" style="max-width: 250px;">
-                        <div class="input-group">
-                            <span class="input-group-text bg-white border-end-0">
-                                <i class="fas fa-search text-muted"></i>
+                        <tr class="alert-row" style="cursor:pointer;" data-alert-id="@alert.Id">
+                            <td>
+                                <div style="display:flex;align-items:center;gap:8px;">
+                                    <div class="gs-sensor-dot @(sc >= 75 ? "gs-dot-red" : sc >= 50 ? "gs-dot-yellow" : "gs-dot-green")"></div>
+                                    <span class="fw-bold">@alert.SensorId</span>
+                                </div>
+                            </td>
+                            <td><span style="color:var(--gs-red);">@Math.Round(alert.Temperature, 1)°</span></td>
+                            <td><span style="color:var(--gs-yellow);">@Math.Round(alert.Smoke, 1)</span></td>
+                            <td><span style="color:var(--gs-blue);">@Math.Round(alert.Humidity, 1)%</span></td>
+                            <td><span class="fw-bold" style="color:@scColor">@Math.Round(sc, 1)%</span></td>
+                            <td><small class="text-muted">@alert.Timestamp.ToLocalTime().ToString("MMM dd, HH:mm")</small></td>
+                            <td>
+                                <span class="badge rounded-pill @(alert.Status == "NotReviewed" ? "bg-warning text-dark" :
+                                                                            alert.Status == "InReview" ? "bg-info" : "bg-success")">
+                                @(alert.Status == "NotReviewed" ? "Pending" : alert.Status == "InReview" ? "In Review" : "Resolved")
                             </span>
-                            <input type="text" class="form-control border-start-0" id="alertSearch" placeholder="Search">
-                        </div>
-                    </div>
-                </div>
-
-                <table class="table table-bordered table-hover" id="alertTable">
-                    <thead>
-                        <tr>
-                            <td><i class="fas fa-microchip"></i> Sensor ID</td>
-                            <td><i class="fas fa-thermometer-half"></i> Temp (°C)</td>
-                            <td><i class="fas fa-smog"></i> Smoke</td>
-                            <td><i class="fas fa-tint"></i> Humidity</td>
-                            <td><i class="fas fa-clock"></i> Alert Time</td>
-                            <td><i class="fas fa-flag"></i> Status</td>
-                            <td><i class="fas fa-tools"></i> Actions</td>
+                        </td>
+                        <td class="text-center">
+                            @if (alert.Status == "NotReviewed")
+                                {
+                                    <button class="btn btn-outline-dark btn-sm" onclick="event.stopPropagation();acknowledgeAlert('@alert.Id')">
+                                        <i class="fas fa-check"></i> Accept
+                                    </button>
+                                }
+                                else if (alert.Status == "InReview" && alert.ReviewedBy == User.Identity?.Name)
+                                {
+                                    <button class="btn btn-success btn-sm" onclick="event.stopPropagation();showResolveModal('@alert.Id')">
+                                        <i class="fas fa-flag-checkered"></i> Resolve
+                                    </button>
+                                }
+                                else if (alert.Status == "InReview")
+                                {
+                                    <small class="text-muted"><i class="fas fa-user-clock me-1"></i>@alert.ReviewedBy</small>
+                                }
+                                else
+                                {
+                                    <small style="color:var(--gs-green);"><i class="fas fa-check-double me-1"></i>Done</small>
+                                }
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var alert in Model)
-                        {
-                            <tr data-widget="expandable-table" aria-expanded="false">
-                                <td>@alert.SensorId</td>
-                                <td>@alert.Temperature</td>
-                                <td>@alert.Smoke</td>
-                                <td>@alert.Humidity</td>
-                                <td>@alert.Timestamp.ToLocalTime().ToString("g")</td>
-                                <td>
-                                    <span class="badge
-                                        @(alert.Status == "NotReviewed" ? "bg-warning text-dark" :
-                                          alert.Status == "InReview" ? "bg-info" : "bg-success")">
-                                        @alert.Status
-                                    </span>
-                                </td>
-                                <td>
-                                    <div class="btn-group">
-                                        @if (alert.Status == "NotReviewed")
-                                        {
-                                            <button class="btn btn-outline-dark btn-sm" onclick="acknowledgeAlert('@alert.Id')">
-                                                <i class="fas fa-check-circle"></i> Accept
-                                            </button>
-                                        }
-                                        else if (alert.Status == "InReview" && alert.ReviewedBy == User.Identity.Name)
-                                        {
-                                            <button class="btn btn-outline-success btn-sm" onclick="showResolveModal('@alert.Id')">
-                                                <i class="fas fa-flag-checkered"></i> Resolve
-                                            </button>
-                                        }
-                                        else if (alert.Status == "InReview")
-                                        {
-                                            <span class="text-muted small">Being reviewed by @alert.ReviewedBy</span>
-                                        }
-                                        else if (alert.Status == "Resolved")
-                                        {
-                                            <span class="text-success small"><i class="fas fa-check-double"></i> Done</span>
-                                        }
+                        <tr class="alert-details-row d-none" data-alert-id="@alert.Id">
+                            <td colspan="8" style="padding:0;border-top:none;">
+                                <div class="gs-expand-detail">
+                                    <div class="row g-3">
+                                        <div class="col-md-4">
+                                            <div class="gs-detail-item">
+                                                <i class="fas fa-user-check" style="color:var(--gs-green);"></i>
+                                                <div><span class="gs-detail-label">Reviewed By</span><span class="gs-detail-value">@(alert.ReviewedBy ?? "—")</span></div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="gs-detail-item">
+                                                <i class="fas fa-clock" style="color:var(--gs-blue);"></i>
+                                                <div><span class="gs-detail-label">Reviewed At</span><span class="gs-detail-value">@(alert.ReviewedAt?.ToLocalTime().ToString("f") ?? "—")</span></div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="gs-detail-item">
+                                                <i class="fas fa-map-marker-alt" style="color:var(--gs-red);"></i>
+                                                <div><span class="gs-detail-label">Location</span><span class="gs-detail-value">@alert.Latitude.ToString("F4"), @alert.Longitude.ToString("F4")</span></div>
+                                            </div>
+                                        </div>
                                     </div>
-                                </td>
-                            </tr>
-                            <tr class="expandable-body d-none">
-                                <td colspan="7">
-                                    <div class="p-3 bg-light rounded shadow-sm">
-                                        <h6 class="mb-2"><i class="fas fa-info-circle text-success"></i> Resolution Details</h6>
-                                        <p class="mb-1"><strong><i class="fas fa-user-check"></i> Reviewed By:</strong> @alert.ReviewedBy</p>
-                                        <p class="mb-1"><strong><i class="fas fa-clock"></i> Reviewed At:</strong> @alert.ReviewedAt?.ToLocalTime().ToString("f")</p>
-                                        <p><strong><i class="fas fa-sticky-note"></i> Note:</strong> @alert.ResolutionNote</p>
-                                    </div>
-                                </td>
-                            </tr>
+                                    @if (!string.IsNullOrEmpty(alert.ResolutionNote))
+                                    {
+                                        <div class="gs-detail-note mt-2">
+                                            <i class="fas fa-sticky-note" style="color:var(--gs-yellow);"></i>
+                                            <span>@alert.ResolutionNote</span>
+                                        </div>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 
-                        }
-                    </tbody>
-                </table>
+<!-- Resolve Modal -->
+<div class="modal fade" id="resolveModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content" style="border-radius:14px;overflow:hidden;">
+            <div class="modal-header" style="background:linear-gradient(135deg,var(--gs-green),#10b981);border:none;">
+                <h5 class="modal-title text-white"><i class="fas fa-flag-checkered me-2"></i>Resolve Alert</h5>
+                <button type="button" class="close text-white" id="modalCloseX" style="opacity:1;text-shadow:none;"><span>&times;</span></button>
+            </div>
+            <div class="modal-body" style="padding:24px;">
+                <input type="hidden" id="resolveAlertId" />
+                <label for="resolutionNote" class="form-label fw-bold" style="font-size:.85rem;">Resolution Note</label>
+                <textarea class="form-control" id="resolutionNote" rows="3" placeholder="Describe how the issue was resolved..." style="border-radius:10px;"></textarea>
+            </div>
+            <div class="modal-footer" style="border-top:1px solid var(--gs-gray-200);padding:12px 24px;">
+                <button type="button" class="btn btn-secondary btn-sm" id="modalCancelBtn" style="border-radius:8px;">Cancel</button>
+                <button type="button" class="btn btn-success btn-sm" id="modalSubmitBtn" style="border-radius:8px;"><i class="fas fa-check me-1"></i>Submit</button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- ✅ Modal لإغلاق التنبيه -->
-<div class="modal fade" id="resolveModal" tabindex="-1" aria-labelledby="resolveModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <form id="resolveForm">
-            <div class="modal-content">
-                <div class="modal-header bg-success text-white">
-                    <h5 class="modal-title" id="resolveModalLabel"><i class="fas fa-edit"></i> Resolve Alert</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <input type="hidden" id="resolveAlertId" name="id" />
-                    <div class="mb-3">
-                        <label for="resolutionNote" class="form-label">Resolution Note</label>
-                        <textarea class="form-control" id="resolutionNote" name="resolutionNote" required rows="3" placeholder="Describe how the issue was resolved..."></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-success">Submit</button>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                </div>
-            </div>
-        </form>
-    </div>
-</div>
-
 @section Scripts {
     <script>
-        document.getElementById("alertSearch").addEventListener("keyup", function () {
-            const input = this.value.toLowerCase();
-            const rows = document.querySelectorAll("#alertTable tbody tr");
-
-            rows.forEach(row => {
-                const text = row.textContent.toLowerCase();
-                row.style.display = text.includes(input) ? "" : "none";
+        document.querySelectorAll('.alert-row').forEach(row => {
+            row.addEventListener('click', function () {
+                const id = this.getAttribute('data-alert-id');
+                const d = document.querySelector(`.alert-details-row[data-alert-id="${id}"]`);
+                if (d) d.classList.toggle('d-none');
             });
         });
-
-        function acknowledgeAlert(alertId) {
-            fetch(`/Alerts/Acknowledge/${alertId}`, { method: "POST" })
-                .then(res => {
-                    if (res.ok) location.reload();
-                    else alert("Failed to acknowledge alert.");
-                });
+        document.getElementById("alertSearch").addEventListener("keyup", function () {
+            const v = this.value.toLowerCase();
+            document.querySelectorAll(".alert-row").forEach(r => {
+                const m = r.textContent.toLowerCase().includes(v);
+                r.style.display = m ? "" : "none";
+                const id = r.getAttribute('data-alert-id');
+                const d = document.querySelector(`.alert-details-row[data-alert-id="${id}"]`);
+                if (d && !m) d.classList.add('d-none');
+            });
+        });
+        function acknowledgeAlert(id) {
+            fetch(`/Alerts/Acknowledge/${id}`, { method: "POST" }).then(r => { if (r.ok) location.reload(); });
         }
-
-        function showResolveModal(alertId) {
-            document.getElementById("resolveAlertId").value = alertId;
-            new bootstrap.Modal(document.getElementById("resolveModal")).show();
+        function showResolveModal(id) {
+            document.getElementById("resolveAlertId").value = id;
+            document.getElementById("resolutionNote").value = "";
+            $('#resolveModal').modal('show');
         }
-
-        document.getElementById("resolveForm").addEventListener("submit", function (e) {
-            e.preventDefault();
+        document.getElementById("modalCloseX").addEventListener("click", () => $('#resolveModal').modal('hide'));
+        document.getElementById("modalCancelBtn").addEventListener("click", () => $('#resolveModal').modal('hide'));
+        document.getElementById("modalSubmitBtn").addEventListener("click", function () {
             const id = document.getElementById("resolveAlertId").value;
             const note = document.getElementById("resolutionNote").value;
-
-            fetch(`/Alerts/Resolve?id=${id}&resolutionNote=${encodeURIComponent(note)}`, {
-                method: "POST"
-            }).then(res => {
-                if (res.ok) location.reload();
-                else alert("Failed to resolve alert.");
-            });
+            if (!note.trim()) { alert("Please enter a resolution note."); return; }
+            fetch(`/Alerts/Resolve?id=${id}&resolutionNote=${encodeURIComponent(note)}`, { method: "POST" })
+                .then(r => { if (r.ok) { $('#resolveModal').modal('hide'); location.reload(); } });
         });
     </script>
 }
